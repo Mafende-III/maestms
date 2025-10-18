@@ -23,6 +23,9 @@ const nextConfig = {
   },
   // Skip building API routes during static export
   trailingSlash: true,
+  // Disable static optimization for error pages
+  generateBuildId: () => 'build',
+  poweredByHeader: false,
 }
 
 module.exports = nextConfig
