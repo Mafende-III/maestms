@@ -1,0 +1,29 @@
+# Coolify Configuration for Mafende Estate Management System
+# Domain: www.maest.streamlinexperts.rw
+
+version: '3.8'
+
+services:
+  app:
+    build: .
+    environment:
+      - DATABASE_URL=file:/app/data/prod.db
+      - NEXTAUTH_URL=https://www.maest.streamlinexperts.rw
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NODE_ENV=production
+      - NEXT_PUBLIC_APP_URL=https://www.maest.streamlinexperts.rw
+    ports:
+      - "3000:3000"
+    volumes:
+      - app-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  app-data:
+    name: mafende-estate-data
