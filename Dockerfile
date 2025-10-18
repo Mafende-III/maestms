@@ -1,6 +1,7 @@
 # Stage 1: Dependencies
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl-dev openssl1.1-compat
+RUN apk add --no-cache libc6-compat openssl-dev
+RUN cd /usr/lib && ln -sf libssl.so.3 libssl.so.1.1 && ln -sf libcrypto.so.3 libcrypto.so.1.1
 WORKDIR /app
 
 # Copy package files
@@ -9,7 +10,8 @@ RUN npm ci
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
-RUN apk add --no-cache libc6-compat openssl-dev openssl1.1-compat
+RUN apk add --no-cache libc6-compat openssl-dev
+RUN cd /usr/lib && ln -sf libssl.so.3 libssl.so.1.1 && ln -sf libcrypto.so.3 libcrypto.so.1.1
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -23,7 +25,8 @@ RUN npm run build
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl-dev openssl1.1-compat
+RUN apk add --no-cache libc6-compat openssl-dev
+RUN cd /usr/lib && ln -sf libssl.so.3 libssl.so.1.1 && ln -sf libcrypto.so.3 libcrypto.so.1.1
 WORKDIR /app
 
 ENV NODE_ENV=production
