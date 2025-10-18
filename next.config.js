@@ -23,10 +23,6 @@ const nextConfig = {
   },
   // Skip building API routes during static export
   trailingSlash: true,
-  // Disable static optimization for pages that use server-side features
-  async generateStaticParams() {
-    return []
-  },
 }
 
 module.exports = nextConfig
