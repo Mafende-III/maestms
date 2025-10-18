@@ -41,7 +41,8 @@ RUN npx prisma generate
 ENV DATABASE_URL="file:/tmp/build.db"
 RUN npx prisma db push --accept-data-loss || true
 
-# Build the Next.js application
+# Build the Next.js application with development NODE_ENV to include all dependencies
+ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
@@ -96,4 +97,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Initialize database and start server
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node server.js"]
+CMD ["sh", "-c", "export RUNTIME_ENVIRONMENT=true && npx prisma db push --accept-data-loss && node server.js"]
