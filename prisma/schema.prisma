@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management (Simplified for MVP)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("MANAGER") // Using String instead of enum for SQLite
+  isActive  Boolean  @default(true)
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+// Tenant Management (Simplified for MVP)
+model Tenant {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  phoneNumber String   @unique
+  email       String?
+  idNumber    String?
+  status      String   @default("ACTIVE") // Using String instead of enum
+  location    String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  leases      Lease[]
+  payments    Payment[]
+
+  @@index([phoneNumber])
+  @@index([status])
+}
+
+// Lease Management (Simplified for MVP)
+model Lease {
+  id              String   @id @default(cuid())
+  tenantId        String
+  propertyAddress String
+  monthlyRent     Float
+  securityDeposit Float?
+  startDate       DateTime
+  endDate         DateTime?
+  status          String   @default("ACTIVE") // ACTIVE, TERMINATED, EXPIRED
+  terms           String?  // Lease terms and conditions
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payments        Payment[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([startDate])
+}
+
+// Payment Management (Simplified for MVP)
+model Payment {
+  id              String   @id @default(cuid())
+  leaseId         String
+  tenantId        String
+  amount          Float
+  paymentDate     DateTime
+  dueDate         DateTime?
+  paymentMethod   String   // CASH, MPESA, BANK_TRANSFER, CHEQUE
+  status          String   @default("PENDING") // PENDING, COMPLETED, OVERDUE, CANCELLED
+  referenceNumber String?  // M-Pesa code, cheque number, etc.
+  notes           String?
+  recordedBy      String   // User ID who recorded the payment
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  lease           Lease    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([leaseId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([paymentDate])
+  @@index([dueDate])
+}
+
+// Expense Management
+model Expense {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  category    String   // SHOP_EXPENSES, HOUSEHOLD_EXPENSES, PROPERTY_MAINTENANCE, UTILITIES, TAXES, INSURANCE, LEGAL, MARKETING, REPAIRS, SECURITY, CLEANING, SUPPLIES, TRANSPORT, STAFF_WAGES, OTHER
+  expenseDate DateTime
+  paymentMethod String? // CASH, MPESA, BANK_TRANSFER, CHEQUE
+  receiptNumber String?
+  vendor      String?  // Who was paid
+  propertyAddress String? // Which property (optional)
+  notes       String?
+  recordedBy  String   // User ID who recorded the expense
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([expenseDate])
+  @@index([propertyAddress])
+}
+
+// Asset Management
+model Asset {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  category         String   // PROPERTY, EQUIPMENT, FURNITURE, VEHICLE, OTHER
+  purchasePrice    Float?
+  currentValue     Float?
+  purchaseDate     DateTime?
+  condition        String   @default("GOOD") // EXCELLENT, GOOD, FAIR, POOR
+  location         String?  // Property address or storage location
+  serialNumber     String?
+  warrantyExpiry   DateTime?
+  maintenanceDate  DateTime?
+  status           String   @default("ACTIVE") // ACTIVE, SOLD, DAMAGED, DISPOSED
+  notes            String?
+  recordedBy       String   // User ID who recorded the asset
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([category])
+  @@index([status])
+  @@index([location])
+  @@index([purchaseDate])
+}
+
+// Sales Management
+model Sale {
+  id               String   @id @default(cuid())
+  description      String   // Item/service description
+  salePrice        Float
+  saleDate         DateTime
+  buyerName        String?  // Customer name (optional for shop sales)
+  buyerPhone       String?
+  buyerEmail       String?
+  category         String   // CINEMA, MOBILE_MONEY, CHARCOAL, PROPERTY, LIVESTOCK, PRODUCE, RETAIL, SERVICES, OTHER
+  saleType         String   // SHOP_SALE, PROPERTY_SALE, BULK_SALE, SERVICE
+  paymentMethod    String   // CASH, MPESA, BANK_TRANSFER, CHEQUE
+  paymentStatus    String   @default("COMPLETED") // Most shop sales are immediate
+  quantity         Float?   // For products with quantity
+  unitPrice        Float?   // Price per unit
+  location         String?  // Shop location or property address
+  agentName        String?  // Sales agent/broker name (for property)
+  commissionRate   Float?   // Commission percentage (for property)
+  commissionAmount Float?   // Calculated commission (for property)
+  notes            String?
+  recordedBy       String   // User ID who recorded the sale
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([saleDate])
+  @@index([category])
+  @@index([saleType])
+  @@index([paymentStatus])
+}
+
+// For future development - keeping the structure simple for now
+model SystemInfo {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
