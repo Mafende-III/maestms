@@ -39,38 +39,42 @@ interface Sale {
 }
 
 interface FormData {
-  propertyAddress: string
+  description: string
   salePrice: string
   saleDate: string
   buyerName: string
   buyerPhone: string
   buyerEmail: string
-  agentName: string
-  commissionRate: string
-  commissionAmount: string
+  category: string
   saleType: string
   paymentMethod: string
   paymentStatus: string
-  documentStatus: string
-  transferDate: string
+  quantity: string
+  unitPrice: string
+  location: string
+  agentName: string
+  commissionRate: string
+  commissionAmount: string
   notes: string
 }
 
 const initialFormData: FormData = {
-  propertyAddress: '',
+  description: '',
   salePrice: '',
   saleDate: '',
   buyerName: '',
   buyerPhone: '',
   buyerEmail: '',
+  category: 'RETAIL',
+  saleType: 'SHOP_SALE',
+  paymentMethod: 'CASH',
+  paymentStatus: 'COMPLETED',
+  quantity: '',
+  unitPrice: '',
+  location: '',
   agentName: '',
   commissionRate: '',
   commissionAmount: '',
-  saleType: 'DIRECT',
-  paymentMethod: 'CASH',
-  paymentStatus: 'PENDING',
-  documentStatus: 'PENDING',
-  transferDate: '',
   notes: '',
 }
 
@@ -200,20 +204,22 @@ export default function SalesPage() {
   const handleEdit = (sale: Sale) => {
     setEditingSale(sale)
     setFormData({
-      propertyAddress: sale.propertyAddress,
+      description: sale.description,
       salePrice: sale.salePrice.toString(),
       saleDate: sale.saleDate.split('T')[0],
-      buyerName: sale.buyerName,
+      buyerName: sale.buyerName || '',
       buyerPhone: sale.buyerPhone || '',
       buyerEmail: sale.buyerEmail || '',
+      category: sale.category,
+      saleType: sale.saleType,
+      paymentMethod: sale.paymentMethod || 'CASH',
+      paymentStatus: sale.paymentStatus,
+      quantity: sale.quantity?.toString() || '',
+      unitPrice: sale.unitPrice?.toString() || '',
+      location: sale.location || '',
       agentName: sale.agentName || '',
       commissionRate: sale.commissionRate?.toString() || '',
       commissionAmount: sale.commissionAmount?.toString() || '',
-      saleType: sale.saleType,
-      paymentMethod: sale.paymentMethod || 'NOT_SPECIFIED',
-      paymentStatus: sale.paymentStatus,
-      documentStatus: sale.documentStatus,
-      transferDate: sale.transferDate ? sale.transferDate.split('T')[0] : '',
       notes: sale.notes || '',
     })
     setShowForm(true)
