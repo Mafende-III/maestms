@@ -1,7 +1,10 @@
 # Stage 1: Dependencies
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl-dev
+RUN apk add --no-cache libc6-compat openssl-dev curl
 RUN cd /usr/lib && ln -sf libssl.so.3 libssl.so.1.1 && ln -sf libcrypto.so.3 libcrypto.so.1.1
+# Additional OpenSSL compatibility for Prisma engines
+ENV OPENSSL_ROOT_DIR=/usr
+ENV LD_LIBRARY_PATH=/usr/lib
 WORKDIR /app
 
 # Copy package files
@@ -10,8 +13,11 @@ RUN npm ci
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
-RUN apk add --no-cache libc6-compat openssl-dev
+RUN apk add --no-cache libc6-compat openssl-dev curl
 RUN cd /usr/lib && ln -sf libssl.so.3 libssl.so.1.1 && ln -sf libcrypto.so.3 libcrypto.so.1.1
+# Additional OpenSSL compatibility for Prisma engines
+ENV OPENSSL_ROOT_DIR=/usr
+ENV LD_LIBRARY_PATH=/usr/lib
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -25,8 +31,11 @@ RUN npm run build
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl-dev
+RUN apk add --no-cache libc6-compat openssl-dev curl
 RUN cd /usr/lib && ln -sf libssl.so.3 libssl.so.1.1 && ln -sf libcrypto.so.3 libcrypto.so.1.1
+# Additional OpenSSL compatibility for Prisma engines
+ENV OPENSSL_ROOT_DIR=/usr
+ENV LD_LIBRARY_PATH=/usr/lib
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -62,6 +71,6 @@ ENV HOSTNAME="0.0.0.0"
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); });"
+  CMD curl -f http://localhost:3000/api/health || exit 1
 
 CMD ["node", "server.js"]
