@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: 'Comprehensive estate management platform for agricultural leasing operations',
 }
 
+// Force dynamic rendering for the entire app
+export const dynamic = 'force-dynamic'
+
 export default function RootLayout({
   children,
 }: {
