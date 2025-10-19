@@ -97,6 +97,9 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+ENV NODE_ENV=production
+ENV PRISMA_ENABLE_TRACING=false
+ENV PRISMA_DISABLE_WARNINGS=true
 
 # Healthcheck for production monitoring
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
