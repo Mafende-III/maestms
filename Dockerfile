@@ -81,6 +81,10 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 RUN mkdir -p ./public
 COPY --from=builder /app/public ./public
 
+# Copy startup script
+COPY --from=builder /app/scripts ./scripts
+RUN chmod +x ./scripts/startup.sh
+
 # Create directory for SQLite database with proper permissions
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
@@ -94,5 +98,9 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Healthcheck for production monitoring
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
+
 # Initialize database and start server
-CMD ["sh", "-c", "export RUNTIME_ENVIRONMENT=true && npx prisma db push --accept-data-loss && npx prisma db seed && node server.js"]
+CMD ["./scripts/startup.sh"]
