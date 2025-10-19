@@ -83,9 +83,32 @@ export const authOptions: NextAuthOptions = {
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Always redirect to dashboard after login instead of trying external URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      else if (new URL(url).origin === baseUrl) return url
+      // Support multiple domains
+      const allowedDomains = [
+        process.env.NEXTAUTH_URL,
+        process.env.NEXT_PUBLIC_APP_URL,
+        'http://mgws4gw88co0s88k0kscgow4.31.220.17.127.sslip.io',
+        'http://maestms.streamlinexperts.rw',
+        'https://mgws4gw88co0s88k0kscgow4.31.220.17.127.sslip.io',
+        'https://maestms.streamlinexperts.rw'
+      ].filter(Boolean)
+
+      // If URL is relative, use current baseUrl
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`
+      }
+
+      // Check if URL origin is in allowed domains
+      try {
+        const urlOrigin = new URL(url).origin
+        if (allowedDomains.some(domain => domain?.startsWith(urlOrigin))) {
+          return url
+        }
+      } catch (e) {
+        console.error('Invalid URL in redirect:', url)
+      }
+
+      // Default redirect to dashboard
       return `${baseUrl}/dashboard`
     }
   },
@@ -97,6 +120,7 @@ export const authOptions: NextAuthOptions = {
   debug: process.env.NODE_ENV === 'development',
   // Use relative URLs to avoid domain issues
   useSecureCookies: process.env.NODE_ENV === 'production',
+  trustHost: true,
   cookies: {
     sessionToken: {
       name: process.env.NODE_ENV === 'production' ? `__Secure-next-auth.session-token` : `next-auth.session-token`,

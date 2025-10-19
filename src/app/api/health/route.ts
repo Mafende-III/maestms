@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  // Skip health checks during build time
-  if (process.env.NODE_ENV === 'production' && !process.env.RUNTIME_ENVIRONMENT) {
+  // Only skip health checks during actual build time, not runtime
+  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
     return NextResponse.json({
       status: 'build-time-skip',
       checks: {
