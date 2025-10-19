@@ -12,6 +12,7 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  username  String   @unique
   name      String
   password  String
   role      String   @default("MANAGER") // Using String instead of enum for SQLite
@@ -21,6 +22,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@index([email])
+  @@index([username])
 }
 
 // Tenant Management (Simplified for MVP)
