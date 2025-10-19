@@ -41,8 +41,9 @@ RUN npx prisma generate
 ENV DATABASE_URL="file:/tmp/build.db"
 RUN npx prisma db push --accept-data-loss || true
 
-# Build the Next.js application with development NODE_ENV to include all dependencies
-ENV NODE_ENV=development
+# Build the Next.js application with proper environment variables
+ENV NODE_ENV=production
+ENV NEXT_PRIVATE_STANDALONE=true
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
@@ -62,6 +63,7 @@ ENV OPENSSL_CONF=/usr/lib/ssl/openssl.cnf
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_PRIVATE_STANDALONE=true
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user

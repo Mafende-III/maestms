@@ -20,11 +20,14 @@ const nextConfig = {
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
+    NEXT_PRIVATE_STANDALONE: 'true',
   },
-  // Skip building API routes during static export
-  trailingSlash: true,
-  // Disable static optimization for error pages
-  generateBuildId: () => 'build',
+  // Skip trailing slash redirects that can cause issues
+  skipTrailingSlashRedirect: true,
+  // Custom build ID to avoid conflicts
+  generateBuildId: async () => {
+    return process.env.BUILD_ID || 'development'
+  },
   poweredByHeader: false,
 }
 
