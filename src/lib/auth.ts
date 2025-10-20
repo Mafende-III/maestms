@@ -13,12 +13,15 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        console.log('🔐 Authorize called with:', {
-          email: credentials?.email,
-          hasPassword: !!credentials?.password,
-          passwordLength: credentials?.password?.length,
-          timestamp: new Date().toISOString()
-        })
+        // Debug logging only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔐 Authorize called with:', {
+            email: credentials?.email,
+            hasPassword: !!credentials?.password,
+            passwordLength: credentials?.password?.length,
+            timestamp: new Date().toISOString()
+          })
+        }
 
         if (!credentials?.email || !credentials?.password) {
           console.log('❌ Missing credentials')
@@ -84,7 +87,9 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      console.log('🔑 JWT callback:', { hasUser: !!user, tokenId: token.id, userRole: user?.role })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔑 JWT callback:', { hasUser: !!user, tokenId: token.id, userRole: user?.role })
+      }
       if (user) {
         token.role = user.role
         token.id = user.id
@@ -92,7 +97,9 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      console.log('📱 Session callback:', { hasToken: !!token, tokenId: token.id, sessionEmail: session.user?.email })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📱 Session callback:', { hasToken: !!token, tokenId: token.id, sessionEmail: session.user?.email })
+      }
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
@@ -110,7 +117,9 @@ export const authOptions: NextAuthOptions = {
         'https://localhost:3000'
       ]
 
-      console.log('NextAuth redirect:', { url, baseUrl, allowedDomains })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('NextAuth redirect:', { url, baseUrl, allowedDomains })
+      }
 
       // If URL is relative, use current baseUrl
       if (url.startsWith("/")) {
@@ -120,19 +129,28 @@ export const authOptions: NextAuthOptions = {
       // Check if URL origin is in allowed domains
       try {
         const urlOrigin = new URL(url).origin
-        console.log('Checking origin:', urlOrigin)
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Checking origin:', urlOrigin)
+        }
 
         if (allowedDomains.includes(urlOrigin)) {
-          console.log('Origin allowed, returning:', url)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Origin allowed, returning:', url)
+          }
           return url
         }
       } catch (e) {
-        console.error('Invalid URL in redirect:', url, e)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Invalid URL in redirect:', url, e)
+        }
       }
 
       // Default redirect to dashboard on current domain
       const dashboardUrl = `${baseUrl}/dashboard`
-      console.log('Default redirect to:', dashboardUrl)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Default redirect to:', dashboardUrl)
+      }
       return dashboardUrl
     }
   },

@@ -4,12 +4,12 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 export async function GET() {
-  // Temporarily enable in production for debugging
-  // if (process.env.NODE_ENV === 'production') {
-  //   return NextResponse.json({
-  //     error: 'Diagnostics disabled in production'
-  //   }, { status: 403 })
-  // }
+  // Only allow in development environment for security
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({
+      error: 'Diagnostics disabled in production'
+    }, { status: 403 })
+  }
 
   try {
     // Test database connection

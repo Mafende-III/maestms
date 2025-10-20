@@ -1,0 +1,83 @@
+# Production-Ready Dockerfile for Coolify Deployment
+# Stage 1: Dependencies
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat openssl-dev curl openssl jq sqlite
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Stage 2: Builder
+FROM node:20-alpine AS builder
+RUN apk add --no-cache libc6-compat openssl-dev curl openssl jq sqlite
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Generate Prisma Client with explicit binary target
+RUN npx prisma generate
+
+# Build the Next.js application
+ENV NODE_ENV=production
+ENV NEXT_PRIVATE_STANDALONE=true
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+# Stage 3: Production Runner
+FROM node:20-alpine AS runner
+RUN apk add --no-cache libc6-compat openssl-dev curl openssl jq sqlite sudo
+
+# Install additional tools for debugging
+RUN apk add --no-cache bash nano htop procps
+
+WORKDIR /app
+
+# Production environment variables
+ENV NODE_ENV=production
+ENV NEXT_PRIVATE_STANDALONE=true
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PRISMA_ENABLE_TRACING=false
+ENV PRISMA_DISABLE_WARNINGS=true
+
+# Create application user but keep root access for debugging
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 --ingroup nodejs nextjs
+
+# Configure sudo access for nextjs user (for troubleshooting)
+RUN echo "nextjs ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/nextjs
+
+# Copy application files
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/scripts ./scripts
+
+# Create persistent data directory
+# This will be mounted as persistent volume in Coolify
+RUN mkdir -p /app/data /app/logs
+RUN chown -R nextjs:nodejs /app
+
+# Make startup scripts executable
+RUN chmod +x /app/scripts/startup.sh /app/scripts/startup-production.sh
+
+# Switch to nextjs user (but sudo is available)
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Environment variables for runtime
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+ENV DATABASE_URL="file:/app/data/prod.db"
+
+# Enhanced healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Startup script with enhanced logging
+CMD ["/app/scripts/startup-production.sh"]
