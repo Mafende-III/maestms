@@ -3,6 +3,14 @@ import { prisma } from '@/lib/prisma'
 import * as bcrypt from 'bcryptjs'
 
 export async function POST() {
+  // Only allow during initial setup or development
+  const userCount = await prisma.user.count()
+  if (userCount > 0 && process.env.NODE_ENV === 'production') {
+    return NextResponse.json({
+      error: 'Force seed disabled - users already exist'
+    }, { status: 403 })
+  }
+
   try {
     // First, clear all users to start fresh
     await prisma.user.deleteMany({})

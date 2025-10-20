@@ -1,8 +1,7 @@
 #!/bin/sh
 
-# Ensure data directory exists with correct permissions
+# Ensure data directory exists (permissions already set in Dockerfile)
 mkdir -p /app/data /app/backups
-chown -R nextjs:nodejs /app/data /app/backups
 
 # Initialize database on first startup
 if [ ! -f /app/data/prod.db ]; then

@@ -99,13 +99,15 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       // Support multiple domains
       const allowedDomains = [
-        process.env.NEXTAUTH_URL,
-        process.env.NEXT_PUBLIC_APP_URL,
         'http://mgws4gw88co0s88k0kscgow4.31.220.17.127.sslip.io',
-        'http://maestms.streamlinexperts.rw',
         'https://mgws4gw88co0s88k0kscgow4.31.220.17.127.sslip.io',
-        'https://maestms.streamlinexperts.rw'
-      ].filter(Boolean)
+        'http://maestms.streamlinexperts.rw',
+        'https://maestms.streamlinexperts.rw',
+        'http://localhost:3000',
+        'https://localhost:3000'
+      ]
+
+      console.log('NextAuth redirect:', { url, baseUrl, allowedDomains })
 
       // If URL is relative, use current baseUrl
       if (url.startsWith("/")) {
@@ -115,15 +117,20 @@ export const authOptions: NextAuthOptions = {
       // Check if URL origin is in allowed domains
       try {
         const urlOrigin = new URL(url).origin
-        if (allowedDomains.some(domain => domain?.startsWith(urlOrigin))) {
+        console.log('Checking origin:', urlOrigin)
+
+        if (allowedDomains.includes(urlOrigin)) {
+          console.log('Origin allowed, returning:', url)
           return url
         }
       } catch (e) {
-        console.error('Invalid URL in redirect:', url)
+        console.error('Invalid URL in redirect:', url, e)
       }
 
-      // Default redirect to dashboard
-      return `${baseUrl}/dashboard`
+      // Default redirect to dashboard on current domain
+      const dashboardUrl = `${baseUrl}/dashboard`
+      console.log('Default redirect to:', dashboardUrl)
+      return dashboardUrl
     }
   },
   pages: {
