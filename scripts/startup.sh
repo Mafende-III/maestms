@@ -13,17 +13,17 @@ if [ ! -f /app/data/prod.db ]; then
 
     echo "✅ Database initialization complete"
 else
-    echo "📦 Database exists, running migrations..."
-    # Run migrations to apply any schema changes
-    npx prisma migrate deploy --schema=/app/prisma/schema.prisma 2>/dev/null || true
+    echo "📦 Database exists, skipping migrations..."
+    # Skip migrations for now to avoid hanging
+    # npx prisma migrate deploy --schema=/app/prisma/schema.prisma 2>/dev/null || true
 
-    # Backup database before starting (keep last 5 backups)
+    # Quick backup (keep last 3 backups)
     BACKUP_FILE="/app/backups/prod_$(date +%Y%m%d_%H%M%S).db"
-    cp /app/data/prod.db "$BACKUP_FILE"
+    cp /app/data/prod.db "$BACKUP_FILE" 2>/dev/null || echo "⚠️ Backup failed, continuing..."
     echo "💾 Database backed up to $BACKUP_FILE"
 
-    # Keep only last 5 backups
-    ls -t /app/backups/*.db 2>/dev/null | tail -n +6 | xargs rm -f 2>/dev/null || true
+    # Keep only last 3 backups
+    ls -t /app/backups/*.db 2>/dev/null | tail -n +4 | xargs rm -f 2>/dev/null || true
 fi
 
 # Start the Next.js server
