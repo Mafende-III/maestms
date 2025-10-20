@@ -122,12 +122,6 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <div className="mt-6 p-4 bg-muted/50 rounded-md">
-              <h4 className="font-medium text-sm mb-2">Demo Credentials:</h4>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <div><strong>Admin:</strong> admin@mafende.com / Admin123!</div>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
