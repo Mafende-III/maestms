@@ -11,7 +11,9 @@ mkdir -p /app/logs
 
 # Function for logging
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a $LOG_FILE
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+    # Try to append to log file, but don't fail if it doesn't work
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> $LOG_FILE 2>/dev/null || true
 }
 
 log "🚀 Starting Mafende Estate Management System"
@@ -86,4 +88,8 @@ log "🌐 Server will be available at: http://localhost:3000"
 log "🔐 Admin credentials: admin@mafende.com / Admin123!"
 
 # Execute the server
-exec node server.js 2>&1 | tee -a $LOG_FILE
+if [ -w "$LOG_FILE" ]; then
+    exec node server.js 2>&1 | tee -a $LOG_FILE
+else
+    exec node server.js
+fi
