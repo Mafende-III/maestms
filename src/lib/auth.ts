@@ -162,17 +162,17 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   debug: process.env.NODE_ENV === 'development',
-  // Use relative URLs to avoid domain issues
-  useSecureCookies: process.env.NODE_ENV === 'production',
+  // Force non-secure cookies for development and HTTP access
+  useSecureCookies: false,
   trustHost: true,
   cookies: {
     sessionToken: {
-      name: process.env.NODE_ENV === 'production' ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
+      name: `next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: false
       }
     }
   }
