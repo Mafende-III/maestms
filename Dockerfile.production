@@ -64,6 +64,9 @@ RUN chown -R nextjs:nodejs /app
 # Make startup scripts executable
 RUN chmod +x /app/scripts/startup.sh /app/scripts/startup-production.sh
 
+# Ensure logs directory is writable
+RUN chmod 755 /app/logs /app/data
+
 # Switch to nextjs user (but sudo is available)
 USER nextjs
 
