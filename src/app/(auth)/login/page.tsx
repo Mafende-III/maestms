@@ -29,17 +29,28 @@ export default function LoginPage() {
         redirect: false,
       })
 
+      console.log('Login result:', result) // Debug log
+
       if (result?.error) {
-        setError('Invalid email or password')
-      } else {
-        // Check if login was successful
-        const session = await getSession()
-        if (session) {
-          router.push('/dashboard')
+        // More specific error messages
+        if (result.error === 'CredentialsSignin') {
+          setError('Invalid email or password. Please check your credentials and try again.')
+        } else if (result.error === 'Configuration') {
+          setError('System configuration error. Please contact support.')
+        } else {
+          setError(result.error || 'Login failed. Please try again.')
         }
+      } else if (result?.ok) {
+        // Successful login
+        router.push('/dashboard')
+        router.refresh() // Force refresh to update session
+      } else {
+        // No result or unexpected response
+        setError('Unable to process login. Please check your connection and try again.')
       }
     } catch (err) {
-      setError('An error occurred during login')
+      console.error('Login error:', err)
+      setError('Connection error. Please check your internet connection and try again.')
     } finally {
       setIsLoading(false)
     }
@@ -68,8 +79,11 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4" onKeyDown={handleKeyDown}>
               {error && (
-                <Alert variant="error">
-                  <AlertDescription>{error}</AlertDescription>
+                <Alert variant="error" className="border-red-500 bg-red-50 text-red-900">
+                  <AlertDescription className="flex items-center gap-2">
+                    <span className="text-xl">⚠️</span>
+                    <span className="font-medium">{error}</span>
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -96,9 +110,9 @@ export default function LoginPage() {
                 type="submit"
                 className="w-full"
                 loading={isLoading}
-                disabled={!email || !password}
+                disabled={!email || !password || isLoading}
               >
-                Sign In
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
 
               <div className="text-center">
