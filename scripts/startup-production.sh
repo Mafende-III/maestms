@@ -51,9 +51,18 @@ fi
 if [ ! -f "$DB_FILE" ]; then
     log "🔄 No existing database found. Initializing new database..."
 
-    # Create database schema using local Prisma (not npx)
+    # Create database schema (try multiple approaches)
     log "🗄️  Creating database schema..."
-    ./node_modules/.bin/prisma db push --accept-data-loss
+    if command -v npx >/dev/null 2>&1; then
+        npx prisma db push --accept-data-loss
+    elif [ -f "./node_modules/.bin/prisma" ]; then
+        ./node_modules/.bin/prisma db push --accept-data-loss
+    elif [ -f "./node_modules/prisma/build/index.js" ]; then
+        node ./node_modules/prisma/build/index.js db push --accept-data-loss
+    else
+        log "❌ Cannot find Prisma CLI"
+        exit 1
+    fi
 
     # Seed database with admin user
     log "🌱 Seeding database with admin user..."
@@ -83,7 +92,16 @@ fi
 
 # Test database connection
 log "🔍 Testing database connection..."
-if ./node_modules/.bin/prisma db execute --stdin <<< "SELECT COUNT(*) FROM User;" >/dev/null 2>&1; then
+PRISMA_CMD=""
+if command -v npx >/dev/null 2>&1; then
+    PRISMA_CMD="npx prisma"
+elif [ -f "./node_modules/.bin/prisma" ]; then
+    PRISMA_CMD="./node_modules/.bin/prisma"
+elif [ -f "./node_modules/prisma/build/index.js" ]; then
+    PRISMA_CMD="node ./node_modules/prisma/build/index.js"
+fi
+
+if [ -n "$PRISMA_CMD" ] && $PRISMA_CMD db execute --stdin <<< "SELECT COUNT(*) FROM User;" >/dev/null 2>&1; then
     log "✅ Database connection successful"
 else
     log "❌ Database connection failed"
