@@ -22,6 +22,13 @@ log "🗂️  Database URL: $DATABASE_URL"
 log "👤 Current user: $(whoami)"
 log "📁 Working directory: $(pwd)"
 
+# Validate required environment variables
+if [ -z "$DATABASE_URL" ]; then
+    log "❌ ERROR: DATABASE_URL environment variable is not set!"
+    log "Please set DATABASE_URL in Coolify environment variables."
+    exit 1
+fi
+
 # Ensure data directory exists with correct permissions
 log "📂 Setting up data directories..."
 sudo mkdir -p /app/data /app/logs
@@ -95,9 +102,10 @@ log "🚀 Starting Next.js server..."
 log "🌐 Server will be available at: http://localhost:3000"
 log "🔐 Admin credentials: admin@mafende.com / Admin123!"
 
-# Execute the server
+# Execute the server (Next.js standalone mode)
+log "🎯 Starting Next.js standalone server..."
 if [ -w "$LOG_FILE" ]; then
-    exec node server.js 2>&1 | tee -a $LOG_FILE
+    exec node server.js 2>&1 | tee -a "$LOG_FILE"
 else
     exec node server.js
 fi
