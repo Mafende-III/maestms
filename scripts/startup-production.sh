@@ -28,47 +28,55 @@ sudo mkdir -p /app/data /app/logs
 sudo chown -R nextjs:nodejs /app/data /app/logs
 log "✅ Data directories configured"
 
+# Get database file path from environment
+DB_FILE="${DATABASE_URL#file:}"
+log "🗄️  Database file path: $DB_FILE"
+
+# Ensure database directory exists
+DB_DIR=$(dirname "$DB_FILE")
+if [ ! -d "$DB_DIR" ]; then
+    log "📁 Creating database directory: $DB_DIR"
+    mkdir -p "$DB_DIR"
+    chown nextjs:nodejs "$DB_DIR"
+fi
+
 # Check if database exists
-if [ ! -f /app/data/prod.db ]; then
+if [ ! -f "$DB_FILE" ]; then
     log "🔄 No existing database found. Initializing new database..."
 
-    # Generate Prisma client (in case it's needed)
-    log "🔧 Generating Prisma client..."
-    npx prisma generate
-
-    # Create database schema
+    # Create database schema using local Prisma (not npx)
     log "🗄️  Creating database schema..."
-    npx prisma db push --accept-data-loss
+    ./node_modules/.bin/prisma db push --accept-data-loss
 
     # Seed database with admin user
     log "🌱 Seeding database with admin user..."
-    npx prisma db seed
+    node prisma/seed.js
 
     # Verify database creation
-    if [ -f /app/data/prod.db ]; then
+    if [ -f "$DB_FILE" ]; then
         log "✅ Database created successfully"
-        log "📊 Database size: $(ls -lh /app/data/prod.db | awk '{print $5}')"
+        log "📊 Database size: $(ls -lh "$DB_FILE" | awk '{print $5}')"
     else
         log "❌ Database creation failed"
         exit 1
     fi
 else
     log "📦 Existing database found"
-    log "📊 Database size: $(ls -lh /app/data/prod.db | awk '{print $5}')"
-    log "📅 Last modified: $(ls -l /app/data/prod.db | awk '{print $6, $7, $8}')"
+    log "📊 Database size: $(ls -lh "$DB_FILE" | awk '{print $5}')"
+    log "📅 Last modified: $(ls -l "$DB_FILE" | awk '{print $6, $7, $8}')"
 
     # Create backup of existing database
-    BACKUP_FILE="/app/data/backup_$(date +%Y%m%d_%H%M%S).db"
-    cp /app/data/prod.db "$BACKUP_FILE"
+    BACKUP_FILE="${DB_DIR}/backup_$(date +%Y%m%d_%H%M%S).db"
+    cp "$DB_FILE" "$BACKUP_FILE"
     log "💾 Database backed up to: $BACKUP_FILE"
 
     # Keep only last 3 backups
-    ls -t /app/data/backup_*.db 2>/dev/null | tail -n +4 | xargs rm -f 2>/dev/null || true
+    ls -t "${DB_DIR}"/backup_*.db 2>/dev/null | tail -n +4 | xargs rm -f 2>/dev/null || true
 fi
 
 # Test database connection
 log "🔍 Testing database connection..."
-if npx prisma db execute --stdin <<< "SELECT COUNT(*) FROM User;" >/dev/null 2>&1; then
+if ./node_modules/.bin/prisma db execute --stdin <<< "SELECT COUNT(*) FROM User;" >/dev/null 2>&1; then
     log "✅ Database connection successful"
 else
     log "❌ Database connection failed"
