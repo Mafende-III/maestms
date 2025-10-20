@@ -13,7 +13,14 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
+        console.log('🔐 Authorize called with:', {
+          email: credentials?.email,
+          hasPassword: !!credentials?.password,
+          passwordLength: credentials?.password?.length
+        })
+
         if (!credentials?.email || !credentials?.password) {
+          console.log('❌ Missing credentials')
           return null
         }
 
@@ -23,8 +30,10 @@ export const authOptions: NextAuthOptions = {
               email: credentials.email
             }
           })
+          console.log('👤 User found:', !!user, user?.email)
 
           if (!user) {
+            console.log('❌ User not found')
             return null
           }
 
@@ -32,12 +41,15 @@ export const authOptions: NextAuthOptions = {
             credentials.password,
             user.password
           )
+          console.log('🔑 Password valid:', isPasswordValid)
 
           if (!isPasswordValid) {
+            console.log('❌ Invalid password')
             return null
           }
 
           if (!user.isActive) {
+            console.log('❌ User not active')
             return null
           }
 
@@ -47,12 +59,14 @@ export const authOptions: NextAuthOptions = {
             data: { lastLogin: new Date() }
           })
 
-          return {
+          const authUser = {
             id: user.id,
             email: user.email,
             name: user.name,
             role: user.role,
           }
+          console.log('✅ Returning auth user:', authUser)
+          return authUser
         } catch (error) {
           console.error('Auth error:', error)
           return null
