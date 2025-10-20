@@ -107,8 +107,10 @@ export const authOptions: NextAuthOptions = {
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Support multiple domains
+      // Support multiple domains (including current Coolify domain)
       const allowedDomains = [
+        'http://jso8o40kcgws0kck0ookg0sc.31.220.17.127.sslip.io',
+        'https://jso8o40kcgws0kck0ookg0sc.31.220.17.127.sslip.io',
         'http://mgws4gw88co0s88k0kscgow4.31.220.17.127.sslip.io',
         'https://mgws4gw88co0s88k0kscgow4.31.220.17.127.sslip.io',
         'http://maestms.streamlinexperts.rw',
