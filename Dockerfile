@@ -105,5 +105,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
 # Initialize database and start server
-# Cache busting: 2025-10-20-v3-fix-user-groups
+# Cache busting: 2025-10-20-v4-debug-auth-flow
 CMD ["./scripts/startup.sh"]

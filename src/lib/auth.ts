@@ -16,7 +16,8 @@ export const authOptions: NextAuthOptions = {
         console.log('🔐 Authorize called with:', {
           email: credentials?.email,
           hasPassword: !!credentials?.password,
-          passwordLength: credentials?.password?.length
+          passwordLength: credentials?.password?.length,
+          timestamp: new Date().toISOString()
         })
 
         if (!credentials?.email || !credentials?.password) {
@@ -83,6 +84,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
+      console.log('🔑 JWT callback:', { hasUser: !!user, tokenId: token.id, userRole: user?.role })
       if (user) {
         token.role = user.role
         token.id = user.id
@@ -90,6 +92,7 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
+      console.log('📱 Session callback:', { hasToken: !!token, tokenId: token.id, sessionEmail: session.user?.email })
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
