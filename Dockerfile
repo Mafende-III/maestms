@@ -38,8 +38,7 @@ COPY . .
 RUN npx prisma generate
 
 # Create initial database structure (for build-time schema validation)
-ENV DATABASE_URL="file:/tmp/build.db"
-RUN npx prisma db push --accept-data-loss || true
+RUN DATABASE_URL="file:/tmp/build.db" npx prisma db push --accept-data-loss || true
 
 # Build the Next.js application with proper environment variables
 ENV NODE_ENV=production
