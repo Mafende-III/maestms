@@ -67,7 +67,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN adduser --system --uid 1001 --ingroup nodejs nextjs
 
 # Copy necessary files
 COPY --from=builder /app/.next/standalone ./
@@ -105,5 +105,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
 # Initialize database and start server
-# Cache busting: 2025-10-20-v2
+# Cache busting: 2025-10-20-v3-fix-user-groups
 CMD ["./scripts/startup.sh"]
