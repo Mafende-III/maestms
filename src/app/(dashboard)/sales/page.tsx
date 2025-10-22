@@ -287,7 +287,7 @@ export default function SalesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Sales Management</h1>
-          <p className="text-muted-foreground">Track property sales and commissions</p>
+          <p className="text-muted-foreground">Sales Recording</p>
         </div>
         {hasPermission('sales.create') && (
           <Button onClick={() => {
@@ -307,11 +307,36 @@ export default function SalesPage() {
           <CardHeader>
             <CardTitle>{editingSale ? 'Edit Sale' : 'Add New Sale'}</CardTitle>
             <CardDescription>
-              {editingSale ? 'Update sale information' : 'Record a new property sale'}
+              {editingSale ? 'Update sale information' :
+               formData.category === 'CHARCOAL' ? 'Record individual charcoal sale' :
+               ['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY'].includes(formData.category) ? 'Record daily business summary' :
+               formData.category === 'PROPERTY' ? 'Record property sale' :
+               'Record new sale transaction'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Category Selection - Primary Driver */}
+                <div className="p-4 bg-slate-50 rounded-lg border-2 border-blue-200">
+                  <Label htmlFor="category" className="text-base font-semibold">Category *</Label>
+                  <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                    <SelectTrigger className="mt-2 bg-white border-2 border-slate-300">
+                      <SelectValue placeholder="Select sales category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-2 border-slate-300 shadow-lg">
+                      <SelectItem value="SHOP">🛒 Shop Sales (Daily Aggregate)</SelectItem>
+                      <SelectItem value="SALON">💇 Salon Services (Daily Aggregate)</SelectItem>
+                      <SelectItem value="CINEMA">🎬 Cinema Tickets (Daily Aggregate)</SelectItem>
+                      <SelectItem value="MOBILE_MONEY">📱 Mobile Money (Daily Aggregate)</SelectItem>
+                      <SelectItem value="CHARCOAL">🔥 Charcoal (Individual Sales)</SelectItem>
+                      <SelectItem value="PROPERTY">🏠 Property/Land Sales</SelectItem>
+                      <SelectItem value="LIVESTOCK">🐄 Livestock Sales</SelectItem>
+                      <SelectItem value="OTHER">📦 Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Basic Sale Information - Always Shown */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="description">Description *</Label>
@@ -319,24 +344,15 @@ export default function SalesPage() {
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Property address, item description, etc."
+                      placeholder={
+                        formData.category === 'CHARCOAL' ? 'Charcoal bags' :
+                        formData.category === 'PROPERTY' ? 'Property address' :
+                        ['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY'].includes(formData.category) ? 'Daily sales summary' :
+                        'Item or service description'
+                      }
                       required
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="salePrice">Sale Price (UGX) *</Label>
-                    <Input
-                      id="salePrice"
-                      type="number"
-                      step="0.01"
-                      value={formData.salePrice}
-                      onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="saleDate">Sale Date *</Label>
                     <Input
@@ -347,202 +363,191 @@ export default function SalesPage() {
                       required
                     />
                   </div>
+                </div>
+
+                {/* Price Information - Always Shown */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="buyerName">Buyer Name *</Label>
+                    <Label htmlFor="salePrice">
+                      {['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY'].includes(formData.category)
+                        ? 'Total Daily Sales (UGX) *'
+                        : 'Sale Price (UGX) *'}
+                    </Label>
                     <Input
-                      id="buyerName"
-                      value={formData.buyerName}
-                      onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })}
+                      id="salePrice"
+                      type="number"
+                      step="0.01"
+                      value={formData.salePrice}
+                      onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                      placeholder={['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY'].includes(formData.category) ? 'Total daily revenue' : 'Sale amount'}
                       required
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="buyerPhone">Buyer Phone</Label>
-                    <Input
-                      id="buyerPhone"
-                      value={formData.buyerPhone}
-                      onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="buyerEmail">Buyer Email</Label>
-                    <Input
-                      id="buyerEmail"
-                      type="email"
-                      value={formData.buyerEmail}
-                      onChange={(e) => setFormData({ ...formData, buyerEmail: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="category">Category *</Label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="SHOP">Shop Sales</SelectItem>
-                        <SelectItem value="SALON">Salon Services</SelectItem>
-                        <SelectItem value="CINEMA">Cinema Tickets</SelectItem>
-                        <SelectItem value="MOBILE_MONEY">Mobile Money</SelectItem>
-                        <SelectItem value="CHARCOAL">Charcoal</SelectItem>
-                        <SelectItem value="PROPERTY">Property</SelectItem>
-                        <SelectItem value="LIVESTOCK">Livestock</SelectItem>
-                        <SelectItem value="RETAIL">Retail</SelectItem>
-                        <SelectItem value="SERVICES">Services</SelectItem>
-                        <SelectItem value="OTHER">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="saleType">Sale Type *</Label>
-                    <Select value={formData.saleType} onValueChange={(value) => setFormData({ ...formData, saleType: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {saleTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="quantity">Quantity</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      step="0.1"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      placeholder="Number of items/bags"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="unitPrice">Unit Price (UGX)</Label>
-                    <Input
-                      id="unitPrice"
-                      type="number"
-                      step="0.01"
-                      value={formData.unitPrice}
-                      onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
-                      placeholder="Price per unit"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="location">Location</Label>
                     <Input
                       id="location"
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      placeholder="Shop location, property address, etc."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="agentName">Agent Name</Label>
-                    <Input
-                      id="agentName"
-                      value={formData.agentName}
-                      onChange={(e) => setFormData({ ...formData, agentName: e.target.value })}
-                      placeholder="Sales agent or broker"
+                      placeholder={
+                        ['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY'].includes(formData.category) ? 'Business center location' :
+                        formData.category === 'PROPERTY' ? 'Property address' :
+                        'Sale location'
+                      }
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="commissionRate">Commission Rate (%)</Label>
-                    <Input
-                      id="commissionRate"
-                      type="number"
-                      step="0.01"
-                      value={formData.commissionRate}
-                      onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
-                    />
+                {/* Quantity & Unit Price - Only for CHARCOAL and LIVESTOCK */}
+                {['CHARCOAL', 'LIVESTOCK'].includes(formData.category) && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="quantity">
+                        Quantity * {formData.category === 'CHARCOAL' ? '(bags)' : '(animals)'}
+                      </Label>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        step="0.1"
+                        value={formData.quantity}
+                        onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                        placeholder={formData.category === 'CHARCOAL' ? 'Number of bags' : 'Number of animals'}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="unitPrice">
+                        Unit Price (UGX) * {formData.category === 'CHARCOAL' ? 'per bag' : 'per animal'}
+                      </Label>
+                      <Input
+                        id="unitPrice"
+                        type="number"
+                        step="0.01"
+                        value={formData.unitPrice}
+                        onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
+                        placeholder={formData.category === 'CHARCOAL' ? 'Price per bag' : 'Price per animal'}
+                        required
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="commissionAmount">Commission Amount (UGX)</Label>
-                    <Input
-                      id="commissionAmount"
-                      type="number"
-                      step="0.01"
-                      value={formData.commissionAmount}
-                      onChange={(e) => setFormData({ ...formData, commissionAmount: e.target.value })}
-                    />
+                )}
+
+                {/* Buyer Information - Only for Individual Sales (CHARCOAL, PROPERTY, LIVESTOCK) */}
+                {['CHARCOAL', 'PROPERTY', 'LIVESTOCK'].includes(formData.category) && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-700 border-b pb-2">Buyer Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="buyerName">
+                          Buyer Name {['CHARCOAL', 'PROPERTY', 'LIVESTOCK'].includes(formData.category) ? '*' : ''}
+                        </Label>
+                        <Input
+                          id="buyerName"
+                          value={formData.buyerName}
+                          onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })}
+                          placeholder="Customer name"
+                          required={['CHARCOAL', 'PROPERTY', 'LIVESTOCK'].includes(formData.category)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="buyerPhone">Buyer Phone</Label>
+                        <Input
+                          id="buyerPhone"
+                          value={formData.buyerPhone}
+                          onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })}
+                          placeholder="Contact number"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Payment Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-700 border-b pb-2">Payment Details</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="paymentMethod">Payment Method *</Label>
+                      <Select value={formData.paymentMethod} onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}>
+                        <SelectTrigger className="bg-white border-2 border-slate-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-2 border-slate-300 shadow-lg">
+                          <SelectItem value="CASH">💵 Cash</SelectItem>
+                          <SelectItem value="MPESA">📱 M-Pesa</SelectItem>
+                          <SelectItem value="BANK_TRANSFER">🏦 Bank Transfer</SelectItem>
+                          {formData.category === 'CHARCOAL' && <SelectItem value="CREDIT">📝 Credit</SelectItem>}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="paymentStatus">Payment Status *</Label>
+                      <Select value={formData.paymentStatus} onValueChange={(value) => setFormData({ ...formData, paymentStatus: value })}>
+                        <SelectTrigger className="bg-white border-2 border-slate-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-2 border-slate-300 shadow-lg">
+                          <SelectItem value="COMPLETED">✅ Completed</SelectItem>
+                          <SelectItem value="PENDING">⏳ Pending</SelectItem>
+                          {formData.paymentMethod === 'CREDIT' && <SelectItem value="OVERDUE">⚠️ Overdue</SelectItem>}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="paymentMethod">Payment Method</Label>
-                    <Select value={formData.paymentMethod} onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {paymentMethods.map((method) => (
-                          <SelectItem key={method.value} value={method.value}>
-                            {method.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {/* Commission Information - Only for PROPERTY and LIVESTOCK */}
+                {['PROPERTY', 'LIVESTOCK'].includes(formData.category) && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-700 border-b pb-2">Agent & Commission</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="agentName">Agent Name</Label>
+                        <Input
+                          id="agentName"
+                          value={formData.agentName}
+                          onChange={(e) => setFormData({ ...formData, agentName: e.target.value })}
+                          placeholder="Sales agent or broker"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="commissionRate">Commission Rate (%)</Label>
+                        <Input
+                          id="commissionRate"
+                          type="number"
+                          step="0.01"
+                          value={formData.commissionRate}
+                          onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
+                          placeholder="Commission percentage"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="transferDate">Transfer Date</Label>
-                    <Input
-                      id="transferDate"
-                      type="date"
-                      value={formData.transferDate}
-                      onChange={(e) => setFormData({ ...formData, transferDate: e.target.value })}
-                    />
-                  </div>
-                </div>
+                )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="paymentStatus">Payment Status</Label>
-                    <Select value={formData.paymentStatus} onValueChange={(value) => setFormData({ ...formData, paymentStatus: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {paymentStatuses.map((status) => (
-                          <SelectItem key={status.value} value={status.value}>
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="documentStatus">Document Status</Label>
-                    <Select value={formData.documentStatus} onValueChange={(value) => setFormData({ ...formData, documentStatus: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {documentStatuses.map((status) => (
-                          <SelectItem key={status.value} value={status.value}>
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Sale Type - Conditional based on category */}
+                <div>
+                  <Label htmlFor="saleType">Sale Type *</Label>
+                  <Select value={formData.saleType} onValueChange={(value) => setFormData({ ...formData, saleType: value })}>
+                    <SelectTrigger className="bg-white border-2 border-slate-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-2 border-slate-300 shadow-lg">
+                      {['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY'].includes(formData.category) && (
+                        <SelectItem value="SHOP_SALE">🏪 Daily Business Sale</SelectItem>
+                      )}
+                      {formData.category === 'CHARCOAL' && (
+                        <>
+                          <SelectItem value="BULK_SALE">📦 Bulk Sale</SelectItem>
+                          <SelectItem value="CASH_SALE">💵 Cash Sale</SelectItem>
+                        </>
+                      )}
+                      {['PROPERTY', 'LIVESTOCK'].includes(formData.category) && (
+                        <SelectItem value="PROPERTY_SALE">🏠 Property Sale</SelectItem>
+                      )}
+                      <SelectItem value="SERVICE">🔧 Service</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
