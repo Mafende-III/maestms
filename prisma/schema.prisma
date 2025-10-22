@@ -120,7 +120,7 @@ model Expense {
   @@index([propertyAddress])
 }
 
-// Asset Management
+// Asset Management (Enhanced for Revenue Tracking)
 model Asset {
   id               String   @id @default(cuid())
   name             String
@@ -140,15 +140,51 @@ model Asset {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Relations
+  sales            Sale[]
+  dailyReports     DailyBusinessReport[]
+
   @@index([category])
   @@index([status])
   @@index([location])
   @@index([purchaseDate])
 }
 
-// Sales Management
+// Daily Business Reports (For Daily Flash Reports)
+model DailyBusinessReport {
+  id             String   @id @default(cuid())
+  assetId        String   // Business center asset (e.g., Ngoma Business Center)
+  reportDate     DateTime @unique // One report per day per asset
+
+  // Business unit totals (daily aggregates)
+  shopSales      Float? @default(0)
+  salonSales     Float? @default(0)
+  cinemaSales    Float? @default(0)
+  mobileMoneyRev Float? @default(0)
+
+  // Expense totals
+  shopExpenses   Float? @default(0)
+  homeExpenses   Float? @default(0)
+  purchases      Float? @default(0)
+
+  // Metadata
+  currency       String @default("UGX")
+  reportedBy     String
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  asset          Asset @relation(fields: [assetId], references: [id])
+
+  @@index([reportDate])
+  @@index([assetId])
+}
+
+// Sales Management (Enhanced for Hybrid Model)
 model Sale {
   id               String   @id @default(cuid())
+  assetId          String?  // Link to revenue-generating asset
   description      String   // Item/service description
   salePrice        Float
   saleDate         DateTime
@@ -156,24 +192,34 @@ model Sale {
   buyerPhone       String?
   buyerEmail       String?
   category         String   // CINEMA, MOBILE_MONEY, CHARCOAL, PROPERTY, LIVESTOCK, PRODUCE, RETAIL, SERVICES, OTHER
-  saleType         String   // SHOP_SALE, PROPERTY_SALE, BULK_SALE, SERVICE
-  paymentMethod    String   // CASH, MPESA, BANK_TRANSFER, CHEQUE
-  paymentStatus    String   @default("COMPLETED") // Most shop sales are immediate
-  quantity         Float?   // For products with quantity
+  saleType         String   // SHOP_SALE, PROPERTY_SALE, BULK_SALE, SERVICE, CASH_SALE
+  paymentMethod    String   // CASH, MPESA, BANK_TRANSFER, CHEQUE, CREDIT
+  paymentStatus    String   @default("COMPLETED") // COMPLETED, PENDING, OVERDUE, CANCELLED
+
+  // Credit sales fields
+  creditStatus     String?  // PAID, UNPAID, PARTIAL (for credit sales)
+
+  quantity         Float?   // For products with quantity (especially charcoal bags)
   unitPrice        Float?   // Price per unit
   location         String?  // Shop location or property address
   agentName        String?  // Sales agent/broker name (for property)
   commissionRate   Float?   // Commission percentage (for property)
   commissionAmount Float?   // Calculated commission (for property)
+  currency         String   @default("UGX")
   notes            String?
   recordedBy       String   // User ID who recorded the sale
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Relations
+  asset            Asset?   @relation(fields: [assetId], references: [id])
+
+  @@index([assetId])
   @@index([saleDate])
   @@index([category])
   @@index([saleType])
   @@index([paymentStatus])
+  @@index([creditStatus])
 }
 
 // For future development - keeping the structure simple for now

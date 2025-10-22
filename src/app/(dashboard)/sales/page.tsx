@@ -58,6 +58,8 @@ interface FormData {
   commissionRate: string
   commissionAmount: string
   notes: string
+  transferDate: string
+  documentStatus: string
 }
 
 const initialFormData: FormData = {
@@ -67,8 +69,8 @@ const initialFormData: FormData = {
   buyerName: '',
   buyerPhone: '',
   buyerEmail: '',
-  category: 'RETAIL',
-  saleType: 'SHOP_SALE',
+  category: 'SHOP',
+  saleType: 'CASH_SALE',
   paymentMethod: 'CASH',
   paymentStatus: 'COMPLETED',
   quantity: '',
@@ -78,13 +80,16 @@ const initialFormData: FormData = {
   commissionRate: '',
   commissionAmount: '',
   notes: '',
+  transferDate: '',
+  documentStatus: 'PENDING',
 }
 
 const saleTypes = [
-  { value: 'DIRECT', label: 'Direct Sale' },
-  { value: 'AGENT', label: 'Agent Sale' },
-  { value: 'AUCTION', label: 'Auction' },
-  { value: 'LEASE_TO_OWN', label: 'Lease to Own' },
+  { value: 'CASH_SALE', label: 'Cash Sale' },
+  { value: 'BULK_SALE', label: 'Bulk Sale' },
+  { value: 'SHOP_SALE', label: 'Shop Sale' },
+  { value: 'PROPERTY_SALE', label: 'Property Sale' },
+  { value: 'SERVICE', label: 'Service' },
 ]
 
 const paymentMethods = [
@@ -92,7 +97,7 @@ const paymentMethods = [
   { value: 'MPESA', label: 'M-Pesa' },
   { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
   { value: 'CHEQUE', label: 'Cheque' },
-  { value: 'INSTALLMENTS', label: 'Installments' },
+  { value: 'CREDIT', label: 'Credit' },
   { value: 'NOT_SPECIFIED', label: 'Not Specified' },
 ]
 
@@ -162,20 +167,22 @@ export default function SalesPage() {
 
     try {
       const payload = {
-        propertyAddress: formData.propertyAddress,
+        description: formData.description || `${formData.saleType} Sale`,
         salePrice: parseFloat(formData.salePrice),
         saleDate: new Date(formData.saleDate).toISOString(),
         buyerName: formData.buyerName,
         buyerPhone: formData.buyerPhone || undefined,
         buyerEmail: formData.buyerEmail || undefined,
-        agentName: formData.agentName || undefined,
-        commissionRate: formData.commissionRate ? parseFloat(formData.commissionRate) : undefined,
-        commissionAmount: formData.commissionAmount ? parseFloat(formData.commissionAmount) : undefined,
+        category: formData.category,
         saleType: formData.saleType,
         paymentMethod: formData.paymentMethod === 'NOT_SPECIFIED' ? undefined : formData.paymentMethod,
         paymentStatus: formData.paymentStatus,
-        documentStatus: formData.documentStatus,
-        transferDate: formData.transferDate ? new Date(formData.transferDate).toISOString() : undefined,
+        quantity: formData.quantity ? parseFloat(formData.quantity) : undefined,
+        unitPrice: formData.unitPrice ? parseFloat(formData.unitPrice) : undefined,
+        location: formData.location || undefined,
+        agentName: formData.agentName || undefined,
+        commissionRate: formData.commissionRate ? parseFloat(formData.commissionRate) : undefined,
+        commissionAmount: formData.commissionAmount ? parseFloat(formData.commissionAmount) : undefined,
         notes: formData.notes || undefined,
       }
 
@@ -307,11 +314,12 @@ export default function SalesPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="propertyAddress">Property Address *</Label>
+                    <Label htmlFor="description">Description *</Label>
                     <Input
-                      id="propertyAddress"
-                      value={formData.propertyAddress}
-                      onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Property address, item description, etc."
                       required
                     />
                   </div>
@@ -372,6 +380,26 @@ export default function SalesPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
+                    <Label htmlFor="category">Category *</Label>
+                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SHOP">Shop Sales</SelectItem>
+                        <SelectItem value="SALON">Salon Services</SelectItem>
+                        <SelectItem value="CINEMA">Cinema Tickets</SelectItem>
+                        <SelectItem value="MOBILE_MONEY">Mobile Money</SelectItem>
+                        <SelectItem value="CHARCOAL">Charcoal</SelectItem>
+                        <SelectItem value="PROPERTY">Property</SelectItem>
+                        <SelectItem value="LIVESTOCK">Livestock</SelectItem>
+                        <SelectItem value="RETAIL">Retail</SelectItem>
+                        <SelectItem value="SERVICES">Services</SelectItem>
+                        <SelectItem value="OTHER">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label htmlFor="saleType">Sale Type *</Label>
                     <Select value={formData.saleType} onValueChange={(value) => setFormData({ ...formData, saleType: value })}>
                       <SelectTrigger>
@@ -386,12 +414,50 @@ export default function SalesPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="quantity">Quantity</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      step="0.1"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                      placeholder="Number of items/bags"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="unitPrice">Unit Price (UGX)</Label>
+                    <Input
+                      id="unitPrice"
+                      type="number"
+                      step="0.01"
+                      value={formData.unitPrice}
+                      onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
+                      placeholder="Price per unit"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      placeholder="Shop location, property address, etc."
+                    />
+                  </div>
                   <div>
                     <Label htmlFor="agentName">Agent Name</Label>
                     <Input
                       id="agentName"
                       value={formData.agentName}
                       onChange={(e) => setFormData({ ...formData, agentName: e.target.value })}
+                      placeholder="Sales agent or broker"
                     />
                   </div>
                 </div>
@@ -628,13 +694,13 @@ export default function SalesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Property</TableHead>
+                    <TableHead>Description</TableHead>
                     <TableHead>Buyer</TableHead>
                     <TableHead>Sale Price</TableHead>
                     <TableHead>Sale Date</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Payment Status</TableHead>
-                    <TableHead>Document Status</TableHead>
                     <TableHead>Commission</TableHead>
                     {(hasPermission('sales.update') || hasPermission('sales.delete')) && (
                       <TableHead className="text-right">Actions</TableHead>
@@ -646,8 +712,8 @@ export default function SalesPage() {
                     <TableRow key={sale.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{sale.propertyAddress}</span>
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{sale.description}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -668,6 +734,11 @@ export default function SalesPage() {
                         {new Date(sale.saleDate).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
+                        <Badge variant="secondary">
+                          {sale.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         <Badge variant="outline">
                           {saleTypes.find(t => t.value === sale.saleType)?.label || sale.saleType}
                         </Badge>
@@ -675,11 +746,6 @@ export default function SalesPage() {
                       <TableCell>
                         <Badge className={getStatusBadgeColor(sale.paymentStatus, 'payment')}>
                           {paymentStatuses.find(s => s.value === sale.paymentStatus)?.label || sale.paymentStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusBadgeColor(sale.documentStatus, 'document')}>
-                          {documentStatuses.find(s => s.value === sale.documentStatus)?.label || sale.documentStatus}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-mono">
