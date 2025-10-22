@@ -62,10 +62,10 @@ interface FormData {
   documentStatus: string
 }
 
-const initialFormData: FormData = {
-  description: '',
+const getInitialFormData = (): FormData => ({
+  description: 'Daily Shop Sales', // Auto-populated for SHOP category
   salePrice: '',
-  saleDate: '',
+  saleDate: new Date().toISOString().split('T')[0], // Today's date
   buyerName: '',
   buyerPhone: '',
   buyerEmail: '',
@@ -82,7 +82,9 @@ const initialFormData: FormData = {
   notes: '',
   transferDate: '',
   documentStatus: 'PENDING',
-}
+})
+
+const initialFormData = getInitialFormData()
 
 const saleTypes = [
   { value: 'CASH_SALE', label: 'Cash Sale' },
@@ -131,9 +133,40 @@ export default function SalesPage() {
   const { hasPermission } = usePermissions()
 
   const resetForm = () => {
-    setFormData(initialFormData)
+    setFormData(getInitialFormData())
     setEditingSale(null)
     setShowForm(false)
+  }
+
+  // Auto-populate description based on category
+  const getAutoDescription = (category: string) => {
+    const autoDescriptions = {
+      'SHOP': 'Daily Shop Sales',
+      'SALON': 'Daily Salon Services',
+      'CINEMA': 'Daily Cinema Tickets',
+      'MOBILE_MONEY': 'Daily Mobile Money Transactions',
+      'CHARCOAL': 'Charcoal Sales',
+      'LIVESTOCK': 'Livestock Sale',
+      'OTHER': ''
+    }
+    return autoDescriptions[category as keyof typeof autoDescriptions] || ''
+  }
+
+  // Handle category change with smart description and date
+  const handleCategoryChange = (category: string) => {
+    const autoDesc = getAutoDescription(category)
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+
+    setFormData(prev => ({
+      ...prev,
+      category,
+      // Auto-populate description if it's empty or was previously auto-populated
+      description: !prev.description ||
+                   prev.description === getAutoDescription(prev.category) ?
+                   autoDesc : prev.description,
+      // Auto-populate date if it's empty
+      saleDate: prev.saleDate || today
+    }))
   }
 
   useEffect(() => {
@@ -292,7 +325,7 @@ export default function SalesPage() {
         {hasPermission('sales.create') && (
           <Button onClick={() => {
             setEditingSale(null)
-            setFormData(initialFormData)
+            setFormData(getInitialFormData())
             setShowForm(true)
           }}>
             <Plus className="h-4 w-4 mr-2" />
@@ -319,7 +352,7 @@ export default function SalesPage() {
                 {/* Category Selection - Primary Driver */}
                 <div className="p-4 bg-slate-50 rounded-lg border-2 border-blue-200">
                   <Label htmlFor="category" className="text-base font-semibold">Category *</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                  <Select value={formData.category} onValueChange={handleCategoryChange}>
                     <SelectTrigger className="mt-2 bg-white border-2 border-slate-300">
                       <SelectValue placeholder="Select sales category" />
                     </SelectTrigger>
@@ -339,22 +372,30 @@ export default function SalesPage() {
                 {/* Basic Sale Information - Always Shown */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="description">Description *</Label>
+                    <Label htmlFor="description" className="flex items-center gap-2">
+                      Description *
+                      {['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY', 'CHARCOAL', 'LIVESTOCK'].includes(formData.category) && (
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">✨ Auto-filled</span>
+                      )}
+                    </Label>
                     <Input
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder={
                         formData.category === 'CHARCOAL' ? 'Charcoal bags' :
-                        formData.category === 'PROPERTY' ? 'Property address' :
-                        ['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY'].includes(formData.category) ? 'Daily sales summary' :
+                        formData.category === 'PROPERTY' ? 'Property address (editable)' :
+                        ['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY'].includes(formData.category) ? 'Auto-filled, but editable' :
                         'Item or service description'
                       }
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="saleDate">Sale Date *</Label>
+                    <Label htmlFor="saleDate" className="flex items-center gap-2">
+                      Sale Date *
+                      <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">📅 Today</span>
+                    </Label>
                     <Input
                       id="saleDate"
                       type="date"
