@@ -41,6 +41,7 @@ interface Sale {
 }
 
 interface FormData {
+  assetId: string
   description: string
   salePrice: string
   saleDate: string
@@ -63,6 +64,7 @@ interface FormData {
 }
 
 const getInitialFormData = (): FormData => ({
+  assetId: 'cmh2iqi9y0000ttaxuvz4ynaj', // Default to Ngoma Business Center
   description: 'Daily Shop Sales', // Auto-populated for SHOP category
   salePrice: '',
   saleDate: new Date().toISOString().split('T')[0], // Today's date
@@ -153,7 +155,21 @@ export default function SalesPage() {
     return autoDescriptions[category as keyof typeof autoDescriptions] || ''
   }
 
-  // Handle category change with smart description and date
+  // Smart asset selection based on category
+  const getSmartAssetId = (category: string) => {
+    // Ngoma Business Center for daily operations
+    if (['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY', 'CHARCOAL'].includes(category)) {
+      return 'cmh2iqi9y0000ttaxuvz4ynaj' // Ngoma Business Center
+    }
+    // Nakasongola Ranch for livestock and property
+    if (['LIVESTOCK', 'PROPERTY'].includes(category)) {
+      return 'cmh2iqia00001ttaxe2o8g4f8' // Nakasongola Ranch
+    }
+    // Default to Ngoma for others
+    return 'cmh2iqi9y0000ttaxuvz4ynaj'
+  }
+
+  // Handle category change with smart description, date, and asset selection
   const handleCategoryChange = (category: string) => {
     const autoDesc = getAutoDescription(category)
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
@@ -161,6 +177,7 @@ export default function SalesPage() {
     setFormData(prev => ({
       ...prev,
       category,
+      assetId: getSmartAssetId(category), // Auto-select appropriate business center (but still editable)
       // Auto-populate description if it's empty or was previously auto-populated
       description: !prev.description ||
                    prev.description === getAutoDescription(prev.category) ?
@@ -202,6 +219,7 @@ export default function SalesPage() {
     try {
       const payload = {
         // Required fields
+        assetId: formData.assetId,
         description: formData.description || `${formData.saleType} Sale`,
         salePrice: parseFloat(formData.salePrice),
         saleDate: new Date(formData.saleDate).toISOString(),
@@ -375,6 +393,50 @@ export default function SalesPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Asset Selection - Auto-selected but editable */}
+                <div>
+                  <Label htmlFor="assetId" className="text-sm font-medium">
+                    Business Center
+                    <span className="text-xs text-green-600 ml-2">(Auto-selected, but editable)</span>
+                  </Label>
+                  <Select value={formData.assetId} onValueChange={(value) => setFormData({...formData, assetId: value})}>
+                    <SelectTrigger className="mt-1 bg-white border-2 border-slate-300">
+                      <SelectValue placeholder="Select business center" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-2 border-slate-300 shadow-lg">
+                      <SelectItem value="cmh2iqi9y0000ttaxuvz4ynaj">🏢 Ngoma Business Center</SelectItem>
+                      <SelectItem value="cmh2iqia00001ttaxe2o8g4f8">🐄 Nakasongola Ranch</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Smart Tabs for Land Assets - Only show for PROPERTY category */}
+                {formData.category === 'PROPERTY' && formData.assetId === 'cmh2iqia00001ttaxe2o8g4f8' && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-700 border-b pb-2">Land Plot Details</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="plotNumber">Plot Number</Label>
+                        <Input
+                          id="plotNumber"
+                          value={formData.location || ''}
+                          onChange={(e) => setFormData({ ...formData, location: `Plot ${e.target.value}` })}
+                          placeholder="e.g., A1, B2, C3"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="plotSize">Plot Size (Acres)</Label>
+                        <Input
+                          id="plotSize"
+                          value={formData.quantity || ''}
+                          onChange={(e) => setFormData({ ...formData, quantity: e.target.value, unitPrice: formData.salePrice ? (parseFloat(formData.salePrice) / parseFloat(e.target.value || '1')).toString() : '' })}
+                          placeholder="e.g., 2.5"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Basic Sale Information - Always Shown */}
                 <div className="grid grid-cols-2 gap-4">
