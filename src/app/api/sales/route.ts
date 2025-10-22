@@ -15,7 +15,7 @@ const createSaleSchema = z.object({
   buyerName: z.string().optional(),
   buyerPhone: z.string().optional(),
   buyerEmail: z.string().email('Invalid email').optional().or(z.literal('')),
-  category: z.enum(['CINEMA', 'MOBILE_MONEY', 'CHARCOAL', 'PROPERTY', 'LIVESTOCK', 'PRODUCE', 'RETAIL', 'SERVICES', 'OTHER']),
+  category: z.enum(['SHOP', 'SALON', 'CINEMA', 'MOBILE_MONEY', 'CHARCOAL', 'PROPERTY', 'LIVESTOCK', 'RETAIL', 'SERVICES', 'OTHER']),
   saleType: z.enum(['SHOP_SALE', 'PROPERTY_SALE', 'BULK_SALE', 'SERVICE', 'CASH_SALE']),
   paymentMethod: z.enum(['CASH', 'MPESA', 'BANK_TRANSFER', 'CHEQUE', 'CREDIT', 'NOT_SPECIFIED']).optional(),
   paymentStatus: z.enum(['PENDING', 'COMPLETED', 'OVERDUE', 'CANCELLED']).default('COMPLETED'),

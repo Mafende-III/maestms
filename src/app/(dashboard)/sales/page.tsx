@@ -124,6 +124,7 @@ export default function SalesPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingSale, setEditingSale] = useState<Sale | null>(null)
   const [formData, setFormData] = useState<FormData>(initialFormData)
+  const [assets, setAssets] = useState<Array<{id: string, name: string, location: string}>>([])
   const [filter, setFilter] = useState({
     saleType: 'ALL',
     paymentStatus: 'ALL',
@@ -200,23 +201,29 @@ export default function SalesPage() {
 
     try {
       const payload = {
+        // Required fields
         description: formData.description || `${formData.saleType} Sale`,
         salePrice: parseFloat(formData.salePrice),
         saleDate: new Date(formData.saleDate).toISOString(),
-        buyerName: formData.buyerName,
-        buyerPhone: formData.buyerPhone || undefined,
-        buyerEmail: formData.buyerEmail || undefined,
         category: formData.category,
         saleType: formData.saleType,
-        paymentMethod: formData.paymentMethod === 'NOT_SPECIFIED' ? undefined : formData.paymentMethod,
-        paymentStatus: formData.paymentStatus,
-        quantity: formData.quantity ? parseFloat(formData.quantity) : undefined,
-        unitPrice: formData.unitPrice ? parseFloat(formData.unitPrice) : undefined,
-        location: formData.location || undefined,
-        agentName: formData.agentName || undefined,
-        commissionRate: formData.commissionRate ? parseFloat(formData.commissionRate) : undefined,
-        commissionAmount: formData.commissionAmount ? parseFloat(formData.commissionAmount) : undefined,
-        notes: formData.notes || undefined,
+
+        // Optional fields - only include if they have values
+        ...(formData.buyerName && { buyerName: formData.buyerName }),
+        ...(formData.buyerPhone && { buyerPhone: formData.buyerPhone }),
+        ...(formData.buyerEmail && { buyerEmail: formData.buyerEmail }),
+        ...(formData.paymentMethod && formData.paymentMethod !== 'NOT_SPECIFIED' && { paymentMethod: formData.paymentMethod }),
+        ...(formData.paymentStatus && { paymentStatus: formData.paymentStatus }),
+        ...(formData.quantity && { quantity: parseFloat(formData.quantity) }),
+        ...(formData.unitPrice && { unitPrice: parseFloat(formData.unitPrice) }),
+        ...(formData.location && { location: formData.location }),
+        ...(formData.agentName && { agentName: formData.agentName }),
+        ...(formData.commissionRate && { commissionRate: parseFloat(formData.commissionRate) }),
+        ...(formData.commissionAmount && { commissionAmount: parseFloat(formData.commissionAmount) }),
+        ...(formData.notes && { notes: formData.notes }),
+
+        // Default values
+        currency: 'UGX'
       }
 
       const url = editingSale ? `/api/sales/${editingSale.id}` : '/api/sales'
