@@ -11,9 +11,9 @@ const fs = require('fs');
 const path = require('path');
 
 // Production configuration
-const PRODUCTION_URL = 'https://www.maest.streamlinexperts.rw'; // Update with actual production URL
+const PRODUCTION_URL = 'http://jso8o40kcgws0kck0ookg0sc.31.220.17.127.sslip.io';
 const ADMIN_EMAIL = 'admin@mafende.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!'; // Use environment variable in production
+const ADMIN_PASSWORD = 'Admin123!';
 
 // CSV data path
 const CSV_PATH = path.join(__dirname, 'ngoma-sales-import.csv');

@@ -11,9 +11,9 @@ const fs = require('fs');
 const path = require('path');
 
 // Production configuration
-const PRODUCTION_URL = 'https://www.maest.streamlinexperts.rw'; // Update with actual production URL
+const PRODUCTION_URL = 'http://jso8o40kcgws0kck0ookg0sc.31.220.17.127.sslip.io';
 const ADMIN_EMAIL = 'admin@mafende.com';
-const ADMIN_PASSWORD = 'Admin123!'; // This should be passed as environment variable in production
+const ADMIN_PASSWORD = 'Admin123!';
 
 // Asset data to import (predefined for consistency)
 const ASSETS_TO_IMPORT = [
@@ -45,26 +45,32 @@ const ASSETS_TO_IMPORT = [
   }
 ];
 
-// Login and get session cookie
+// Login and get session cookie via NextAuth
 async function loginToProduction() {
   console.log('🔐 Logging into production...');
 
-  const loginResponse = await fetch(`${PRODUCTION_URL}/api/auth/signin`, {
+  // Use NextAuth credentials provider
+  const loginResponse = await fetch(`${PRODUCTION_URL}/api/auth/callback/credentials`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: JSON.stringify({
+    body: new URLSearchParams({
       email: ADMIN_EMAIL,
-      password: ADMIN_PASSWORD
-    })
+      password: ADMIN_PASSWORD,
+      redirect: 'false',
+      callbackUrl: PRODUCTION_URL
+    }).toString()
   });
 
+  console.log('Auth response status:', loginResponse.status);
+
   if (!loginResponse.ok) {
-    throw new Error(`Login failed: ${loginResponse.status}`);
+    const errorText = await loginResponse.text();
+    throw new Error(`Login failed: ${loginResponse.status} - ${errorText}`);
   }
 
-  // Extract session cookie
+  // Extract session cookie from Set-Cookie header
   const cookies = loginResponse.headers.get('set-cookie');
   console.log('✅ Login successful');
   return cookies;

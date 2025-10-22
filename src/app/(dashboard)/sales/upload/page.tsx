@@ -59,9 +59,12 @@ export default function SalesUploadPage() {
           // Extract amount (handle "nil", numbers with commas, etc.)
           let amount = 0
           if (amountText.toLowerCase() !== 'nil' && amountText !== '') {
-            // Remove any non-numeric characters except decimal points
+            // In WhatsApp format, dots are thousands separators (588.600 = 588,600)
+            // Remove any non-numeric characters and treat dots as thousands separators
             const cleanAmount = amountText.replace(/[^\d.]/g, '')
-            amount = parseFloat(cleanAmount) || 0
+            // Replace dots with empty string to get the actual number (588.600 -> 588600)
+            const numericAmount = cleanAmount.replace(/\./g, '')
+            amount = parseFloat(numericAmount) || 0
           }
 
           // Map category names to our system
@@ -82,17 +85,22 @@ export default function SalesUploadPage() {
               mappedCategory = 'MOBILE_MONEY'
               break
             case 'charcoal':
-              // Handle special charcoal format like "Charcoal(30bags):600.000"
+              // Handle special charcoal format like "Charcoal(65bags):1.300.000"
               const charcoalMatch = line.match(/charcoal\((\d+(?:\.\d+)?)\s*bags?\)/i)
               if (charcoalMatch) {
-                const quantity = parseFloat(charcoalMatch[1])
+                // Parse quantity - dots in quantity also represent thousands separator if needed
+                const quantityText = charcoalMatch[1]
+                const quantity = quantityText.includes('.') ?
+                  parseFloat(quantityText.replace(/\./g, '')) :
+                  parseFloat(quantityText)
+
                 results.push({
                   _rowIndex: i + 1,
                   date: currentDate,
                   category: 'CHARCOAL',
                   description: 'Charcoal Bags',
                   quantity: quantity,
-                  unitPrice: quantity > 0 ? amount / quantity : 20000, // Default unit price
+                  unitPrice: quantity > 0 ? amount / quantity : 20000, // Calculate actual unit price
                   totalAmount: amount,
                   paymentMethod: 'CASH',
                   paymentStatus: 'COMPLETED',

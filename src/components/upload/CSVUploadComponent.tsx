@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, Download, FileText, CheckCircle, XCircle, AlertTriangle, Eye, MessageSquare } from 'lucide-react'
+import { Upload, Download, FileText, CheckCircle, XCircle, AlertTriangle, Eye, MessageSquare, Edit, Save, X } from 'lucide-react'
 
 interface ValidationError {
   row: number
@@ -58,6 +58,9 @@ export default function CSVUploadComponent({
   const [textInput, setTextInput] = useState('')
   const [inputMethod, setInputMethod] = useState<'file' | 'text'>('file')
   const [parsedData, setParsedData] = useState<ParsedData | null>(null)
+  const [editingRow, setEditingRow] = useState<number | null>(null)
+  const [editedRows, setEditedRows] = useState<Record<number, any>>({})
+  const [hasEdits, setHasEdits] = useState(false)
   const [loading, setLoading] = useState(false)
   const [importing, setImporting] = useState(false)
   const [uploadStep, setUploadStep] = useState<'upload' | 'validate' | 'preview' | 'confirm' | 'complete'>('upload')
@@ -224,6 +227,103 @@ export default function CSVUploadComponent({
     }
   }
 
+  // Handle row editing
+  const startEditingRow = (rowIndex: number) => {
+    setEditingRow(rowIndex)
+    if (!editedRows[rowIndex] && parsedData) {
+      // Initialize edited row with current data
+      setEditedRows(prev => ({
+        ...prev,
+        [rowIndex]: { ...parsedData.rows[rowIndex] }
+      }))
+    }
+  }
+
+  const saveEditedRow = (rowIndex: number) => {
+    if (!parsedData || !editedRows[rowIndex]) return
+
+    // Update the parsed data with edited values
+    const newRows = [...parsedData.rows]
+    newRows[rowIndex] = { ...editedRows[rowIndex] }
+
+    // Re-validate the edited row
+    const rowErrors = validateRow(newRows[rowIndex], rowIndex)
+    const otherErrors = parsedData.errors.filter(e => e.row !== rowIndex + 1)
+    const allErrors = [...otherErrors, ...rowErrors]
+
+    const errors = allErrors.filter(e => e.severity === 'error')
+    const warnings = allErrors.filter(e => e.severity === 'warning')
+
+    const updatedData = {
+      ...parsedData,
+      rows: newRows,
+      errors: allErrors,
+      summary: {
+        total: newRows.length,
+        valid: newRows.length - errors.length,
+        errors: errors.length,
+        warnings: warnings.length
+      }
+    }
+
+    setParsedData(updatedData)
+    onDataParsed(updatedData)
+    setEditingRow(null)
+    setHasEdits(true)
+  }
+
+  // Re-validate all data
+  const revalidateAllData = () => {
+    if (!parsedData) return
+
+    setLoading(true)
+
+    // Re-validate all rows
+    const allErrors: ValidationError[] = []
+    parsedData.rows.forEach((row, index) => {
+      const rowErrors = validateRow(row, index)
+      allErrors.push(...rowErrors)
+    })
+
+    const errors = allErrors.filter(e => e.severity === 'error')
+    const warnings = allErrors.filter(e => e.severity === 'warning')
+
+    const updatedData = {
+      ...parsedData,
+      errors: allErrors,
+      summary: {
+        total: parsedData.rows.length,
+        valid: parsedData.rows.length - errors.length,
+        errors: errors.length,
+        warnings: warnings.length
+      }
+    }
+
+    setParsedData(updatedData)
+    onDataParsed(updatedData)
+    setHasEdits(false)
+    setLoading(false)
+  }
+
+  const cancelEditingRow = () => {
+    setEditingRow(null)
+  }
+
+  const updateEditedField = (rowIndex: number, field: string, value: string) => {
+    setEditedRows(prev => ({
+      ...prev,
+      [rowIndex]: {
+        ...prev[rowIndex],
+        [field]: value
+      }
+    }))
+  }
+
+  // Get current row data (edited or original)
+  const getCurrentRowData = (rowIndex: number) => {
+    return editedRows[rowIndex] || parsedData?.rows[rowIndex] || {}
+  }
+
   // Download template
   const handleDownloadTemplate = () => {
     const link = document.createElement('a')
@@ -318,12 +418,13 @@ export default function CSVUploadComponent({
                         <div className="text-sm">
                           <p className="font-medium text-blue-900 mb-1">WhatsApp Format Example:</p>
                           <code className="text-xs text-blue-700 block bg-white p-2 rounded border">
-                            20/10/25<br />
+                            21/10/25<br />
                             <br />
-                            Salon sales:10.000<br />
-                            Shop sales:466.800<br />
-                            Charcoal(25bags):500.000<br />
-                            Cinema sales:nil
+                            Salon sales:15.000<br />
+                            MM sales:11.600<br />
+                            Shop sales:588.600<br />
+                            Charcoal(65bags):1.300.000<br />
+                            Cinema sales:20.000
                           </code>
                         </div>
                       </div>
@@ -371,10 +472,28 @@ export default function CSVUploadComponent({
           {/* Validation Summary */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                Validation Summary
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  Validation Summary
+                </CardTitle>
+                {hasEdits && (
+                  <Button
+                    onClick={revalidateAllData}
+                    disabled={loading}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+                    ) : (
+                      <CheckCircle className="h-3 w-3" />
+                    )}
+                    Re-validate
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -395,6 +514,15 @@ export default function CSVUploadComponent({
                   <div className="text-sm text-muted-foreground">Warnings</div>
                 </div>
               </div>
+
+              {hasEdits && (
+                <Alert className="mt-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    You have made edits to the data. Click "Re-validate" to check if your changes fixed any issues.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <div className="mt-4 flex items-center gap-2">
                 <Badge variant="outline" className="text-sm">
@@ -433,7 +561,12 @@ export default function CSVUploadComponent({
           {/* Data Preview */}
           <Card>
             <CardHeader>
-              <CardTitle>Data Preview (First 5 rows)</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Data Preview (First 5 rows)</CardTitle>
+                <Badge variant="outline" className="text-xs">
+                  Click any row to edit
+                </Badge>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -443,21 +576,109 @@ export default function CSVUploadComponent({
                       {parsedData.headers.map((header) => (
                         <TableHead key={header}>{header}</TableHead>
                       ))}
+                      <TableHead className="w-24">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {parsedData.rows.slice(0, 5).map((row, index) => (
-                      <TableRow key={index}>
-                        {parsedData.headers.map((header) => (
-                          <TableCell key={header} className="font-mono text-sm">
-                            {row[header]}
+                    {parsedData.rows.slice(0, 5).map((row, index) => {
+                      const currentRow = getCurrentRowData(index)
+                      const isEditing = editingRow === index
+                      const hasErrors = parsedData.errors.some(e => e.row === index + 1 && e.severity === 'error')
+                      const hasWarnings = parsedData.errors.some(e => e.row === index + 1 && e.severity === 'warning')
+
+                      return (
+                        <TableRow
+                          key={index}
+                          className={`
+                            ${hasErrors ? 'bg-red-50 border-red-200' : ''}
+                            ${hasWarnings && !hasErrors ? 'bg-yellow-50 border-yellow-200' : ''}
+                            ${isEditing ? 'bg-blue-50 border-blue-200' : ''}
+                          `}
+                        >
+                          {parsedData.headers.map((header) => (
+                            <TableCell key={header} className="font-mono text-sm">
+                              {isEditing ? (
+                                <Input
+                                  value={currentRow[header] || ''}
+                                  onChange={(e) => updateEditedField(index, header, e.target.value)}
+                                  className="min-w-24 text-xs"
+                                  placeholder={header}
+                                />
+                              ) : (
+                                <span className={hasErrors ? 'text-red-700' : hasWarnings ? 'text-yellow-700' : ''}>
+                                  {currentRow[header]}
+                                </span>
+                              )}
+                            </TableCell>
+                          ))}
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              {isEditing ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => saveEditedRow(index)}
+                                    className="h-7 w-7 p-0"
+                                    title="Save changes"
+                                  >
+                                    <Save className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={cancelEditingRow}
+                                    className="h-7 w-7 p-0"
+                                    title="Cancel editing"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => startEditingRow(index)}
+                                  className="h-7 w-7 p-0"
+                                  title="Edit row"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              )}
+                              {(hasErrors || hasWarnings) && (
+                                <div className="ml-1">
+                                  {hasErrors ? (
+                                    <XCircle className="h-3 w-3 text-red-500" title="Has errors" />
+                                  ) : (
+                                    <AlertTriangle className="h-3 w-3 text-yellow-500" title="Has warnings" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Show specific errors for visible rows */}
+              {parsedData.errors.filter(e => e.row <= 5).length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-medium">Issues in preview rows:</h4>
+                  {parsedData.errors
+                    .filter(e => e.row <= 5)
+                    .slice(0, 10)
+                    .map((error, i) => (
+                      <Alert key={i} variant={error.severity === 'error' ? 'destructive' : 'default'}>
+                        <AlertDescription className="text-xs">
+                          <strong>Row {error.row}, {error.field}:</strong> {error.message}
+                        </AlertDescription>
+                      </Alert>
+                    ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
