@@ -1,0 +1,4 @@
+name,description,category,purchasePrice,currentValue,purchaseDate,condition,location,serialNumber,warrantyExpiry,maintenanceDate,status,notes
+Ngoma Business Center,Multi-business facility with shop salon cinema and mobile money,PROPERTY,50000000,60000000,2020-01-01,GOOD,Ngoma District Rwanda,,,,ACTIVE,Primary revenue-generating asset
+Sample Equipment,Example equipment for reference,EQUIPMENT,1000000,800000,2023-06-15,GOOD,Main Office,SN123456,2025-06-15,2024-10-01,ACTIVE,Replace this row with your equipment data
+Sample Vehicle,Example vehicle for reference,VEHICLE,25000000,20000000,2022-03-10,FAIR,Kampala Office,UBJ123A,2025-03-10,2024-09-15,ACTIVE,Replace this row with your vehicle data

@@ -24,7 +24,8 @@ import {
   Menu,
   X,
   LogOut,
-  User
+  User,
+  Upload
 } from 'lucide-react'
 
 interface DashboardLayoutProps {
@@ -39,6 +40,14 @@ const navigation = [
   { name: 'Sales', href: '/sales', icon: TrendingUp, permission: 'sales.read' },
   { name: 'Expenses', href: '/expenses', icon: Receipt, permission: 'expenses.read' },
   { name: 'Assets', href: '/assets', icon: Package, permission: 'assets.read' },
+]
+
+const uploadNavigation = [
+  { name: 'Upload Assets', href: '/assets/upload', icon: Upload, permission: 'assets.create' },
+  { name: 'Upload Sales', href: '/sales/upload', icon: Upload, permission: 'sales.create' },
+]
+
+const adminNavigation = [
   { name: 'Audits', href: '/audits', icon: Search, permission: 'audits.read' },
   { name: 'Reports', href: '/reports', icon: BarChart3, permission: 'reports.read' },
   { name: 'Settings', href: '/settings', icon: Settings, permission: 'system.admin' },
@@ -56,6 +65,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   const filteredNavigation = navigation.filter(item =>
+    hasPermission(item.permission as any)
+  )
+
+  const filteredUploadNavigation = uploadNavigation.filter(item =>
+    hasPermission(item.permission as any)
+  )
+
+  const filteredAdminNavigation = adminNavigation.filter(item =>
     hasPermission(item.permission as any)
   )
 
@@ -116,7 +133,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           )}
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-1">
+          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+            {/* Main Navigation */}
             {filteredNavigation.map((item) => {
               const isActive = pathname === item.href
               return (
@@ -137,6 +155,68 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Link>
               )
             })}
+
+            {/* Upload Section */}
+            {filteredUploadNavigation.length > 0 && (
+              <>
+                <div className="mt-6 mb-2">
+                  <div className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Data Import
+                  </div>
+                </div>
+                {filteredUploadNavigation.map((item) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`
+                        flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors
+                        ${isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                        }
+                      `}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.name}
+                    </Link>
+                  )
+                })}
+              </>
+            )}
+
+            {/* Admin Section */}
+            {filteredAdminNavigation.length > 0 && (
+              <>
+                <div className="mt-6 mb-2">
+                  <div className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Administration
+                  </div>
+                </div>
+                {filteredAdminNavigation.map((item) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`
+                        flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors
+                        ${isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                        }
+                      `}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.name}
+                    </Link>
+                  )
+                })}
+              </>
+            )}
           </nav>
 
           <Separator />

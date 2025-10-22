@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { usePermissions } from '@/hooks/usePermissions'
-import { Package, Plus, Search, Edit, Trash2, Calendar, DollarSign, MapPin, Settings } from 'lucide-react'
+import { Package, Plus, Search, Edit, Trash2, Calendar, DollarSign, MapPin, Settings, Upload } from 'lucide-react'
 
 interface Asset {
   id: string
@@ -260,12 +260,23 @@ export default function AssetsPage() {
             Manage and track property assets
           </p>
         </div>
-        {canCreate && (
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Asset
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {canCreate && (
+            <>
+              <Button onClick={() => setShowForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Asset
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = '/assets/upload'}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Import CSV
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
