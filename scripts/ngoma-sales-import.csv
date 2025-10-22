@@ -1,0 +1,58 @@
+date,category,description,quantity,unitPrice,totalAmount,notes
+2025-10-02,CHARCOAL,Charcoal Bags,516.5,20000,10330000,Thursday sales
+2025-10-01,SHOP,Daily Shop Sales,1,465400,465400,Wednesday sales
+2025-10-02,SALON,Daily Salon Services,1,16000,16000,Thursday sales
+2025-10-02,CINEMA,Daily Cinema Tickets,1,8000,8000,Thursday sales
+2025-10-02,SHOP,Daily Shop Sales,1,537800,537800,Thursday sales (evening)
+2025-10-02,SALON,Daily Salon Services,1,20000,20000,Thursday sales (evening)
+2025-10-02,CINEMA,Daily Cinema Tickets,1,2400,2400,Thursday sales (evening)
+2025-10-02,MOBILE_MONEY,Daily Mobile Money Transactions,1,1551,1551,Thursday sales
+2025-10-03,SALON,Daily Salon Services,1,9000,9000,Friday sales
+2025-10-03,MOBILE_MONEY,Daily Mobile Money Transactions,1,1885,1885,Friday sales
+2025-10-03,SHOP,Daily Shop Sales,1,473200,473200,Friday sales
+2025-10-03,CINEMA,Daily Cinema Tickets,1,0,0,Friday sales (no revenue)
+2025-10-03,CHARCOAL,Charcoal Bags,19,20000,380000,Friday sales
+2025-10-04,SALON,Daily Salon Services,1,15000,15000,Saturday sales
+2025-10-04,MOBILE_MONEY,Daily Mobile Money Transactions,1,3680,3680,Saturday sales
+2025-10-04,SHOP,Daily Shop Sales,1,598500,598500,Saturday sales
+2025-10-04,CINEMA,Daily Cinema Tickets,1,52000,52000,Saturday sales
+2025-10-05,SALON,Daily Salon Services,1,18000,18000,Saturday sales
+2025-10-05,MOBILE_MONEY,Daily Mobile Money Transactions,1,7105,7105,Saturday sales
+2025-10-05,SHOP,Daily Shop Sales,1,523900,523900,Saturday sales
+2025-10-05,CINEMA,Daily Cinema Tickets,1,14000,14000,Saturday sales
+2025-10-05,CHARCOAL,Charcoal Bags,30,20000,600000,Saturday sales
+2025-10-10,SALON,Daily Salon Services,1,20000,20000,Thursday sales
+2025-10-10,MOBILE_MONEY,Daily Mobile Money Transactions,1,3300,3300,Thursday sales
+2025-10-10,SHOP,Daily Shop Sales,1,596300,596300,Thursday sales
+2025-10-10,CINEMA,Daily Cinema Tickets,1,0,0,Thursday sales (nil)
+2025-10-10,CHARCOAL,Charcoal Bags,20,20000,400000,Thursday sales
+2025-10-11,SALON,Daily Salon Services,1,18000,18000,Friday sales
+2025-10-11,MOBILE_MONEY,Daily Mobile Money Transactions,1,14890,14890,Friday sales
+2025-10-11,SHOP,Daily Shop Sales,1,615400,615400,Friday sales
+2025-10-11,CINEMA,Daily Cinema Tickets,1,0,0,Friday sales (nil)
+2025-10-11,CHARCOAL,Charcoal Bags,0,20000,0,Friday sales (nil)
+2025-10-12,SALON,Daily Salon Services,1,20000,20000,Saturday sales
+2025-10-12,MOBILE_MONEY,Daily Mobile Money Transactions,1,7037,7037,Saturday sales
+2025-10-12,SHOP,Daily Shop Sales,1,487900,487900,Saturday sales
+2025-10-12,CINEMA,Daily Cinema Tickets,1,0,0,Saturday sales (nil)
+2025-10-12,CHARCOAL,Charcoal Bags,17,20000,340000,Saturday sales
+2025-10-13,SALON,Daily Salon Services,1,20000,20000,Sunday sales
+2025-10-13,MOBILE_MONEY,Daily Mobile Money Transactions,1,11547,11547,Sunday sales
+2025-10-13,SHOP,Daily Shop Sales,1,567800,567800,Sunday sales
+2025-10-13,CINEMA,Daily Cinema Tickets,1,0,0,Sunday sales (nil)
+2025-10-13,CHARCOAL,Charcoal Bags,22.5,20000,450000,Sunday sales
+2025-10-14,SALON,Daily Salon Services,1,6000,6000,Monday sales
+2025-10-14,MOBILE_MONEY,Daily Mobile Money Transactions,1,0,0,Monday sales (no data)
+2025-10-14,SHOP,Daily Shop Sales,1,0,0,Monday sales (incomplete data)
+2025-10-14,CINEMA,Daily Cinema Tickets,1,0,0,Monday sales (no data)
+2025-10-14,CHARCOAL,Charcoal Bags,0,20000,0,Monday sales (no data)
+2025-10-15,SALON,Daily Salon Services,1,20000,20000,Tuesday sales
+2025-10-15,MOBILE_MONEY,Daily Mobile Money Transactions,1,5140,5140,Tuesday sales
+2025-10-15,SHOP,Daily Shop Sales,1,544700,544700,Tuesday sales
+2025-10-15,CINEMA,Daily Cinema Tickets,1,0,0,Tuesday sales (nil)
+2025-10-15,CHARCOAL,Charcoal Bags,26,20000,520000,Tuesday sales
+2025-10-16,SALON,Daily Salon Services,1,20000,20000,Wednesday sales
+2025-10-16,MOBILE_MONEY,Daily Mobile Money Transactions,1,14000,14000,Wednesday sales
+2025-10-16,SHOP,Daily Shop Sales,1,590800,590800,Wednesday sales
+2025-10-16,CINEMA,Daily Cinema Tickets,1,0,0,Wednesday sales (nil)
+2025-10-16,CHARCOAL,Charcoal Bags,0,20000,0,Wednesday sales (nil)

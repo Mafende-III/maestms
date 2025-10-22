@@ -128,9 +128,9 @@ export default function SalesPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [assets, setAssets] = useState<Array<{id: string, name: string, location: string}>>([])
   const [filter, setFilter] = useState({
-    saleType: 'ALL',
-    paymentStatus: 'ALL',
-    documentStatus: 'ALL'
+    category: 'ALL',
+    dateRange: 'ALL',
+    paymentStatus: 'ALL'
   })
 
   const { hasPermission } = usePermissions()
@@ -194,9 +194,25 @@ export default function SalesPage() {
   const fetchSales = async () => {
     try {
       const params = new URLSearchParams()
-      if (filter.saleType !== 'ALL') params.append('saleType', filter.saleType)
+      if (filter.category !== 'ALL') params.append('category', filter.category)
       if (filter.paymentStatus !== 'ALL') params.append('paymentStatus', filter.paymentStatus)
-      if (filter.documentStatus !== 'ALL') params.append('documentStatus', filter.documentStatus)
+      if (filter.dateRange !== 'ALL') {
+        const today = new Date()
+        let startDate = new Date()
+
+        switch (filter.dateRange) {
+          case 'TODAY':
+            startDate = new Date(today.setHours(0, 0, 0, 0))
+            break
+          case 'WEEK':
+            startDate = new Date(today.setDate(today.getDate() - 7))
+            break
+          case 'MONTH':
+            startDate = new Date(today.setMonth(today.getMonth() - 1))
+            break
+        }
+        params.append('date', startDate.toISOString().split('T')[0])
+      }
 
       const response = await fetch(`/api/sales?${params}`)
       if (response.ok) {
@@ -327,10 +343,30 @@ export default function SalesPage() {
     }
   }
 
+  // Enhanced KPI calculations
   const totalSales = sales.reduce((sum, sale) => sum + sale.salePrice, 0)
   const totalCommissions = sales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0)
   const completedSales = sales.filter(sale => sale.paymentStatus === 'COMPLETED').length
   const pendingSales = sales.filter(sale => sale.paymentStatus === 'PENDING').length
+
+  // Business-specific metrics
+  const shopSales = sales.filter(s => s.category === 'SHOP').reduce((sum, s) => sum + s.salePrice, 0)
+  const charcoalSales = sales.filter(s => s.category === 'CHARCOAL').reduce((sum, s) => sum + s.salePrice, 0)
+  const salonSales = sales.filter(s => s.category === 'SALON').reduce((sum, s) => sum + s.salePrice, 0)
+  const cinemaSales = sales.filter(s => s.category === 'CINEMA').reduce((sum, s) => sum + s.salePrice, 0)
+  const mobileMoneyRev = sales.filter(s => s.category === 'MOBILE_MONEY').reduce((sum, s) => sum + s.salePrice, 0)
+
+  // Top performing category
+  const categoryTotals = [
+    { name: 'Shop', value: shopSales, icon: '🛒' },
+    { name: 'Charcoal', value: charcoalSales, icon: '🔥' },
+    { name: 'Salon', value: salonSales, icon: '💇' },
+    { name: 'Cinema', value: cinemaSales, icon: '🎬' },
+    { name: 'Mobile Money', value: mobileMoneyRev, icon: '📱' }
+  ].sort((a, b) => b.value - a.value)
+
+  const topCategory = categoryTotals[0]
+  const avgDailySales = totalSales / Math.max(1, new Set(sales.map(s => s.saleDate.split('T')[0])).size)
 
   if (loading) {
     return (
@@ -684,104 +720,176 @@ export default function SalesPage() {
         </Card>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      {/* Business KPI Cards - Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalSales)}</div>
-            <p className="text-xs text-muted-foreground">{sales.length} properties sold</p>
+            <div className="text-xl sm:text-2xl font-bold text-green-700">{formatCurrency(totalSales)}</div>
+            <p className="text-xs text-muted-foreground">{sales.length} transactions • Avg: {formatCurrency(avgDailySales)}/day</p>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Commissions</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Top Category</CardTitle>
+            <span className="text-lg">{topCategory?.icon}</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalCommissions)}</div>
-            <p className="text-xs text-muted-foreground">From {sales.filter(s => s.commissionAmount).length} sales</p>
+            <div className="text-xl sm:text-2xl font-bold text-blue-700">{topCategory?.name}</div>
+            <p className="text-xs text-muted-foreground">{formatCurrency(topCategory?.value || 0)} • {Math.round(((topCategory?.value || 0) / totalSales) * 100)}% of total</p>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className="border-l-4 border-l-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed Sales</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Shop Sales</CardTitle>
+            <span className="text-lg">🛒</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedSales}</div>
-            <p className="text-xs text-muted-foreground">Payment completed</p>
+            <div className="text-xl sm:text-2xl font-bold text-orange-700">{formatCurrency(shopSales)}</div>
+            <p className="text-xs text-muted-foreground">{sales.filter(s => s.category === 'SHOP').length} daily reports</p>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className="border-l-4 border-l-purple-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Sales</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Charcoal Sales</CardTitle>
+            <span className="text-lg">🔥</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingSales}</div>
-            <p className="text-xs text-muted-foreground">Awaiting payment</p>
+            <div className="text-xl sm:text-2xl font-bold text-purple-700">{formatCurrency(charcoalSales)}</div>
+            <p className="text-xs text-muted-foreground">{sales.filter(s => s.category === 'CHARCOAL' && s.salePrice > 0).length} actual sales</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Business Breakdown - Mobile Responsive */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filters</CardTitle>
+          <CardTitle className="text-lg">Business Unit Performance</CardTitle>
+          <p className="text-sm text-muted-foreground">Revenue breakdown by business category</p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="saleTypeFilter">Sale Type</Label>
-              <Select value={filter.saleType} onValueChange={(value) => setFilter({ ...filter, saleType: value })}>
-                <SelectTrigger>
-                  <SelectValue />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+            {categoryTotals.map((cat, index) => (
+              <div key={cat.name} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border">
+                <div className="flex items-center space-x-2">
+                  <span className="text-lg">{cat.icon}</span>
+                  <div>
+                    <p className="text-sm font-medium">{cat.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {sales.filter(s => s.category === cat.name.toUpperCase().replace(' ', '_')).length} records
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold">{formatCurrency(cat.value)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {Math.round((cat.value / totalSales) * 100)}%
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Business-Relevant Filters - Responsive */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Filter Sales Data</CardTitle>
+          <p className="text-sm text-muted-foreground">Filter by business category, time period, and payment status</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="categoryFilter" className="text-sm font-medium">Business Category</Label>
+              <Select value={filter.category} onValueChange={(value) => setFilter({ ...filter, category: value })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All Types</SelectItem>
-                  {saleTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="ALL">🏢 All Categories</SelectItem>
+                  <SelectItem value="SHOP">🛒 Shop Sales</SelectItem>
+                  <SelectItem value="CHARCOAL">🔥 Charcoal Sales</SelectItem>
+                  <SelectItem value="SALON">💇 Salon Services</SelectItem>
+                  <SelectItem value="CINEMA">🎬 Cinema Tickets</SelectItem>
+                  <SelectItem value="MOBILE_MONEY">📱 Mobile Money</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="paymentStatusFilter">Payment Status</Label>
+
+            <div className="space-y-2">
+              <Label htmlFor="dateRangeFilter" className="text-sm font-medium">Time Period</Label>
+              <Select value={filter.dateRange} onValueChange={(value) => setFilter({ ...filter, dateRange: value })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">📅 All Time</SelectItem>
+                  <SelectItem value="TODAY">📆 Today</SelectItem>
+                  <SelectItem value="WEEK">📊 Last 7 Days</SelectItem>
+                  <SelectItem value="MONTH">📈 Last 30 Days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="paymentStatusFilter" className="text-sm font-medium">Payment Status</Label>
               <Select value={filter.paymentStatus} onValueChange={(value) => setFilter({ ...filter, paymentStatus: value })}>
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Payments" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All Statuses</SelectItem>
-                  {paymentStatuses.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="ALL">💳 All Payments</SelectItem>
+                  <SelectItem value="COMPLETED">✅ Completed</SelectItem>
+                  <SelectItem value="PENDING">⏳ Pending</SelectItem>
+                  <SelectItem value="OVERDUE">⚠️ Overdue</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="documentStatusFilter">Document Status</Label>
-              <Select value={filter.documentStatus} onValueChange={(value) => setFilter({ ...filter, documentStatus: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Statuses</SelectItem>
-                  {documentStatuses.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          </div>
+
+          {/* Quick Filter Buttons - Mobile Friendly */}
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-xs text-muted-foreground mb-2">Quick Filters:</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={filter.category === 'SHOP' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter({ ...filter, category: 'SHOP' })}
+                className="text-xs"
+              >
+                🛒 Shop Only
+              </Button>
+              <Button
+                variant={filter.category === 'CHARCOAL' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter({ ...filter, category: 'CHARCOAL' })}
+                className="text-xs"
+              >
+                🔥 Charcoal Only
+              </Button>
+              <Button
+                variant={filter.dateRange === 'WEEK' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter({ ...filter, dateRange: 'WEEK' })}
+                className="text-xs"
+              >
+                📊 This Week
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilter({ category: 'ALL', dateRange: 'ALL', paymentStatus: 'ALL' })}
+                className="text-xs"
+              >
+                🔄 Reset All
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -805,97 +913,148 @@ export default function SalesPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Buyer</TableHead>
-                    <TableHead>Sale Price</TableHead>
-                    <TableHead>Sale Date</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Payment Status</TableHead>
-                    <TableHead>Commission</TableHead>
-                    {(hasPermission('sales.update') || hasPermission('sales.delete')) && (
-                      <TableHead className="text-right">Actions</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sales.map((sale) => (
-                    <TableRow key={sale.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{sale.description}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div className="font-medium">{sale.buyerName}</div>
-                            {sale.buyerPhone && (
-                              <div className="text-xs text-muted-foreground">{sale.buyerPhone}</div>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono">
-                        {formatCurrency(sale.salePrice)}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(sale.saleDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {sale.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {saleTypes.find(t => t.value === sale.saleType)?.label || sale.saleType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusBadgeColor(sale.paymentStatus, 'payment')}>
-                          {paymentStatuses.find(s => s.value === sale.paymentStatus)?.label || sale.paymentStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-mono">
-                        {sale.commissionAmount ? formatCurrency(sale.commissionAmount) : '-'}
-                      </TableCell>
+            <>
+              {/* Desktop Table View - Hidden on Mobile */}
+              <div className="hidden lg:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[200px]">Description</TableHead>
+                      <TableHead className="min-w-[120px]">Sale Price</TableHead>
+                      <TableHead className="min-w-[100px]">Date</TableHead>
+                      <TableHead className="min-w-[100px]">Category</TableHead>
+                      <TableHead className="min-w-[100px]">Payment</TableHead>
+                      <TableHead className="min-w-[80px]">Qty</TableHead>
                       {(hasPermission('sales.update') || hasPermission('sales.delete')) && (
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
+                        <TableHead className="text-right min-w-[80px]">Actions</TableHead>
+                      )}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sales.map((sale) => (
+                      <TableRow key={sale.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">
+                              {sale.category === 'SHOP' ? '🛒' :
+                               sale.category === 'CHARCOAL' ? '🔥' :
+                               sale.category === 'SALON' ? '💇' :
+                               sale.category === 'CINEMA' ? '🎬' :
+                               sale.category === 'MOBILE_MONEY' ? '📱' : '📦'}
+                            </span>
+                            <div>
+                              <span className="font-medium text-sm">{sale.description}</span>
+                              {sale.location && (
+                                <p className="text-xs text-muted-foreground">{sale.location}</p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono font-semibold">
+                          {formatCurrency(sale.salePrice)}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {new Date(sale.saleDate).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short'
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-xs">
+                            {sale.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`text-xs ${getStatusBadgeColor(sale.paymentStatus, 'payment')}`}>
+                            {sale.paymentStatus === 'COMPLETED' ? '✅' : '⏳'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {sale.quantity ? `${sale.quantity}x` : '1x'}
+                        </TableCell>
+                        {(hasPermission('sales.update') || hasPermission('sales.delete')) && (
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {hasPermission('sales.update') && (
+                                <Button variant="ghost" size="sm" onClick={() => handleEdit(sale)}>
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              )}
+                              {hasPermission('sales.delete') && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(sale.id)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card View - Shown on Mobile */}
+              <div className="lg:hidden space-y-3">
+                {sales.map((sale) => (
+                  <Card key={sale.id} className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <span className="text-2xl">
+                          {sale.category === 'SHOP' ? '🛒' :
+                           sale.category === 'CHARCOAL' ? '🔥' :
+                           sale.category === 'SALON' ? '💇' :
+                           sale.category === 'CINEMA' ? '🎬' :
+                           sale.category === 'MOBILE_MONEY' ? '📱' : '📦'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm truncate">{sale.description}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {sale.category}
+                            </Badge>
+                            <Badge className={`text-xs ${getStatusBadgeColor(sale.paymentStatus, 'payment')}`}>
+                              {sale.paymentStatus}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(sale.saleDate).toLocaleDateString()}
+                            {sale.quantity && ` • Qty: ${sale.quantity}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-lg text-green-700">{formatCurrency(sale.salePrice)}</p>
+                        {(hasPermission('sales.update') || hasPermission('sales.delete')) && (
+                          <div className="flex gap-1 mt-2">
                             {hasPermission('sales.update') && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEdit(sale)}
-                              >
-                                <Edit className="h-4 w-4" />
+                              <Button variant="outline" size="sm" onClick={() => handleEdit(sale)}>
+                                <Edit className="h-3 w-3" />
                               </Button>
                             )}
                             {hasPermission('sales.delete') && (
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => handleDelete(sale.id)}
-                                className="text-destructive hover:text-destructive"
+                                className="text-destructive"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             )}
                           </div>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

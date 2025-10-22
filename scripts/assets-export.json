@@ -1,0 +1,30 @@
+[
+  {
+    "id": "cmh2iqi9y0000ttaxuvz4ynaj",
+    "name": "Ngoma Business Center",
+    "description": "Multi-business facility with shop, salon, cinema, mobile money, and charcoal operations",
+    "category": "PROPERTY",
+    "purchasePrice": 50000000,
+    "currentValue": 60000000,
+    "purchaseDate": "2020-01-01T00:00:00.000Z",
+    "condition": "EXCELLENT",
+    "location": "Ngoma District, Rwanda",
+    "serialNumber": null,
+    "status": "ACTIVE",
+    "notes": "Primary revenue-generating asset with multiple business units: Shop, Salon, Cinema, Mobile Money, Charcoal"
+  },
+  {
+    "id": "cmh2iqia00001ttaxe2o8g4f8",
+    "name": "Nakasongola Ranch",
+    "description": "Ranch property with cattle grazing, land sales, and livestock operations",
+    "category": "PROPERTY",
+    "purchasePrice": 2000000000,
+    "currentValue": 2500000000,
+    "purchaseDate": "2018-06-15T00:00:00.000Z",
+    "condition": "GOOD",
+    "location": "Nakasongola District, Uganda",
+    "serialNumber": null,
+    "status": "ACTIVE",
+    "notes": "Ranch operations including cattle grazing leases, land sales, livestock, and charcoal production"
+  }
+]
