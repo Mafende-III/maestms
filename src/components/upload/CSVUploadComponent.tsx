@@ -4,10 +4,12 @@ import { useState, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Upload, Download, FileText, CheckCircle, XCircle, AlertTriangle, Eye } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Upload, Download, FileText, CheckCircle, XCircle, AlertTriangle, Eye, MessageSquare } from 'lucide-react'
 
 interface ValidationError {
   row: number
@@ -53,6 +55,8 @@ export default function CSVUploadComponent({
   parseWhatsAppFormat
 }: CSVUploadComponentProps) {
   const [file, setFile] = useState<File | null>(null)
+  const [textInput, setTextInput] = useState('')
+  const [inputMethod, setInputMethod] = useState<'file' | 'text'>('file')
   const [parsedData, setParsedData] = useState<ParsedData | null>(null)
   const [loading, setLoading] = useState(false)
   const [importing, setImporting] = useState(false)
@@ -143,6 +147,31 @@ export default function CSVUploadComponent({
     }
   }
 
+  // Handle text input processing
+  const handleTextProcess = async () => {
+    if (!textInput.trim()) {
+      alert('Please paste your data first')
+      return
+    }
+
+    setLoading(true)
+    setUploadStep('validate')
+
+    try {
+      const parsed = detectAndParseContent(textInput)
+
+      setParsedData(parsed)
+      onDataParsed(parsed)
+      setUploadStep('preview')
+    } catch (error) {
+      console.error('Parse error:', error)
+      alert(`Failed to parse text: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setUploadStep('upload')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Handle drag and drop
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
@@ -225,7 +254,7 @@ export default function CSVUploadComponent({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5" />
-              Upload Data File
+              Import Data
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -241,27 +270,84 @@ export default function CSVUploadComponent({
                 )}
               </div>
 
-              {/* Drag & Drop Area */}
-              <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
-                onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-lg font-medium">Drop your file here or click to browse</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Supports .csv files and .txt files with WhatsApp format
-                </p>
-              </div>
+              {/* Input Methods Tabs */}
+              <Tabs value={inputMethod} onValueChange={(value) => setInputMethod(value as 'file' | 'text')} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="file" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Upload File
+                  </TabsTrigger>
+                  {supportedFormats.includes('whatsapp') && (
+                    <TabsTrigger value="text" className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Paste WhatsApp
+                    </TabsTrigger>
+                  )}
+                </TabsList>
 
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.txt"
-                onChange={handleFileChange}
-                className="hidden"
-              />
+                {/* File Upload Tab */}
+                <TabsContent value="file" className="space-y-4">
+                  <div
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
+                    onDrop={handleDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-lg font-medium">Drop your file here or click to browse</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Supports .csv files and .txt files
+                    </p>
+                  </div>
+
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,.txt"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </TabsContent>
+
+                {/* Text Input Tab */}
+                {supportedFormats.includes('whatsapp') && (
+                  <TabsContent value="text" className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+                        <MessageSquare className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-blue-900 mb-1">WhatsApp Format Example:</p>
+                          <code className="text-xs text-blue-700 block bg-white p-2 rounded border">
+                            20/10/25<br />
+                            <br />
+                            Salon sales:10.000<br />
+                            Shop sales:466.800<br />
+                            Charcoal(25bags):500.000<br />
+                            Cinema sales:nil
+                          </code>
+                        </div>
+                      </div>
+
+                      <Textarea
+                        placeholder="Paste your WhatsApp daily report here..."
+                        value={textInput}
+                        onChange={(e) => setTextInput(e.target.value)}
+                        rows={8}
+                        className="font-mono text-sm"
+                      />
+
+                      <Button
+                        onClick={handleTextProcess}
+                        disabled={!textInput.trim()}
+                        className="w-full"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Process WhatsApp Data
+                      </Button>
+                    </div>
+                  </TabsContent>
+                )}
+              </Tabs>
             </div>
           </CardContent>
         </Card>
