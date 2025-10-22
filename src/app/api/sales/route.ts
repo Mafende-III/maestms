@@ -99,14 +99,14 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
 
     // Comment out auth checks temporarily
-    // if (!session?.user) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // const userRole = session.user.role as UserRole
-    // if (!hasPermission(userRole, 'sales.create')) {
-    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    // }
+    const userRole = session.user.role as UserRole
+    if (!hasPermission(userRole, 'sales.create')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const body = await request.json()
 
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
         commissionAmount: commissionAmount || null,
         currency: validatedData.currency,
         notes: validatedData.notes || null,
-        recordedBy: session?.user?.id || 'import-script', // Fallback for import
+        recordedBy: session.user.id,
       }
     })
 
