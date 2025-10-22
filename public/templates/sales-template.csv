@@ -1,6 +1,6 @@
-date,category,description,quantity,unitPrice,totalAmount,paymentMethod,paymentStatus,location,notes
-2025-10-20,SHOP,Daily Shop Sales,1,450000,450000,CASH,COMPLETED,Ngoma Business Center,Daily sales aggregate
-2025-10-20,SALON,Daily Salon Services,1,25000,25000,CASH,COMPLETED,Ngoma Business Center,Hair cutting and styling services
-2025-10-20,CINEMA,Daily Cinema Tickets,1,15000,15000,CASH,COMPLETED,Ngoma Business Center,Movie ticket sales
-2025-10-20,MOBILE_MONEY,Daily Mobile Money Transactions,1,8500,8500,MPESA,COMPLETED,Ngoma Business Center,Commission from mobile money transactions
-2025-10-20,CHARCOAL,Charcoal Bags,25,20000,500000,CASH,COMPLETED,Ngoma Business Center,Charcoal bag sales to customers
+date,category,description,quantity,unitPrice,totalAmount,notes
+2025-10-01,SHOP,Daily Shop Sales,1,465400,465400,Wednesday daily sales aggregate
+2025-10-02,CHARCOAL,Charcoal Bags,516.5,20000,10330000,Thursday charcoal sales - large quantity
+2025-10-02,SALON,Daily Salon Services,1,16000,16000,Thursday salon services
+2025-10-02,CINEMA,Daily Cinema Tickets,1,8000,8000,Thursday cinema tickets
+2025-10-02,MOBILE_MONEY,Daily Mobile Money Transactions,1,1551,1551,Thursday mobile money commissions
